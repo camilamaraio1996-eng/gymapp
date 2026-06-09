@@ -59,84 +59,84 @@ export default async function AlumnoHome() {
 
       {/* Profesor */}
       {alumno?.profesor && (
-        <div className="flex items-center gap-3 p-4 rounded-2xl border border-[var(--border)] bg-[var(--card)]">
-          <div className="w-10 h-10 rounded-full bg-purple-400/10 flex items-center justify-center text-sm font-bold text-purple-400 shrink-0">
-            {(alumno.profesor as { nombre: string; apellido: string }).nombre[0]}
-            {(alumno.profesor as { nombre: string; apellido: string }).apellido[0]}
-          </div>
+            <div className="flex items-center gap-3 p-4 rounded-2xl border border-[var(--border)] bg-[var(--card)]">
+              <div className="w-10 h-10 rounded-full bg-purple-400/10 flex items-center justify-center text-sm font-bold text-purple-400 shrink-0">
+                {(alumno.profesor as { nombre: string; apellido: string }).nombre[0]}
+                {(alumno.profesor as { nombre: string; apellido: string }).apellido[0]}
+              </div>
+              <div>
+                <p className="text-xs text-[var(--muted-foreground)]">Profesor asignado</p>
+                <p className="font-semibold text-sm">
+                  {(alumno.profesor as { nombre: string; apellido: string }).nombre} {(alumno.profesor as { nombre: string; apellido: string }).apellido}
+                </p>
+                {(alumno.profesor as { especialidad?: string }).especialidad && (
+                  <p className="text-xs text-[var(--muted-foreground)]">{(alumno.profesor as { especialidad?: string }).especialidad}</p>
+                )}
+              </div>
+              <UserCheck className="w-4 h-4 text-purple-400 ml-auto" />
+            </div>
+          )}
+
+          {/* Active routines preview */}
           <div>
-            <p className="text-xs text-[var(--muted-foreground)]">Profesor asignado</p>
-            <p className="font-semibold text-sm">
-              {(alumno.profesor as { nombre: string; apellido: string }).nombre} {(alumno.profesor as { nombre: string; apellido: string }).apellido}
-            </p>
-            {(alumno.profesor as { especialidad?: string }).especialidad && (
-              <p className="text-xs text-[var(--muted-foreground)]">{(alumno.profesor as { especialidad?: string }).especialidad}</p>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-bold">Rutinas activas</h2>
+              <Link href="/alumno/rutinas" className="text-xs text-[var(--primary)] flex items-center gap-1 hover:underline">
+                Ver todas <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            {!asignaciones?.length ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <ClipboardList className="w-10 h-10 text-[var(--muted-foreground)] mx-auto mb-2" />
+                  <p className="text-sm text-[var(--muted-foreground)] mb-4">No tenés rutinas asignadas aún.</p>
+                  <Link href="/alumno/profesores">
+                    <Button variant="outline" size="sm" className="w-full">
+                      Buscar mi profesor y rutina
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {asignaciones.map((asig) => {
+                  const rutina = asig.rutina as { nombre: string; objetivo: string; dias_por_semana: number; ejercicios: unknown[] }
+                  return (
+                    <Link key={asig.id} href="/alumno/rutinas">
+                      <Card className="hover:border-[var(--primary)]/30 transition-all cursor-pointer">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center shrink-0">
+                                <Dumbbell className="w-5 h-5 text-[var(--primary)]" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-sm truncate">{rutina?.nombre}</p>
+                                <div className="flex gap-1.5 mt-0.5">
+                                  <Badge variant="secondary" className="text-[10px]">{rutina?.dias_por_semana}x semana</Badge>
+                                  <Badge variant="secondary" className="text-[10px]">{rutina?.ejercicios?.length ?? 0} ejercicios</Badge>
+                                </div>
+                              </div>
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-[var(--muted-foreground)] shrink-0" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  )
+                })}
+              </div>
             )}
           </div>
-          <UserCheck className="w-4 h-4 text-purple-400 ml-auto" />
-        </div>
-      )}
 
-      {/* Active routines preview */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold">Rutinas activas</h2>
-          <Link href="/alumno/rutinas" className="text-xs text-[var(--primary)] flex items-center gap-1 hover:underline">
-            Ver todas <ArrowRight className="w-3 h-3" />
+          {/* CTA */}
+          <Link href="/alumno/rutinas">
+            <Button className="w-full" size="lg">
+              <Dumbbell className="w-5 h-5" />
+              Ver mis rutinas
+            </Button>
           </Link>
         </div>
-
-        {!asignaciones?.length ? (
-          <Card>
-            <CardContent className="p-6 text-center">
-              <ClipboardList className="w-10 h-10 text-[var(--muted-foreground)] mx-auto mb-2" />
-              <p className="text-sm text-[var(--muted-foreground)] mb-4">No tenés rutinas asignadas aún.</p>
-              <Link href="/alumno/profesores">
-                <Button variant="outline" size="sm" className="w-full">
-                  Buscar mi profesor y rutina
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {asignaciones.map((asig) => {
-              const rutina = asig.rutina as { nombre: string; objetivo: string; dias_por_semana: number; ejercicios: unknown[] }
-              return (
-                <Link key={asig.id} href="/alumno/rutinas">
-                  <Card className="hover:border-[var(--primary)]/30 transition-all cursor-pointer">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center shrink-0">
-                            <Dumbbell className="w-5 h-5 text-[var(--primary)]" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-sm truncate">{rutina?.nombre}</p>
-                            <div className="flex gap-1.5 mt-0.5">
-                              <Badge variant="secondary" className="text-[10px]">{rutina?.dias_por_semana}x semana</Badge>
-                              <Badge variant="secondary" className="text-[10px]">{rutina?.ejercicios?.length ?? 0} ejercicios</Badge>
-                            </div>
-                          </div>
-                        </div>
-                        <ArrowRight className="w-4 h-4 text-[var(--muted-foreground)] shrink-0" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* CTA */}
-      <Link href="/alumno/rutinas">
-        <Button className="w-full" size="lg">
-          <Dumbbell className="w-5 h-5" />
-          Ver mis rutinas
-        </Button>
-      </Link>
-    </div>
-  )
-}
+      )
+      }
