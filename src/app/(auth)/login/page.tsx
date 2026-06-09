@@ -20,27 +20,61 @@ export default function LoginPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
+    console.log('Iniciando sesión con:', email)
 
     try {
       const supabase = createClient()
+      console.log('Cliente Supabase creado')
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
       if (error) {
-        toast.error('Credenciales incorrectas. Verificá tu email y contraseña.')
+        console.error('Error de autenticación:', error)
+        toast.error(`Error de autenticación: ${error.message}`)
         return
       }
 
-      if (data.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('user_id', data.user.id)
-          .single()
+      console.log('Usuario autenticado con éxito:', data.user)
 
-        if (profile?.role === 'admin') router.push('/admin')
-        else if (profile?.role === 'profesor') router.push('/profesor')
-        else router.push('/alumno')
+      if (data.user) {
+        console.log('Obteniendo perfil de usuario...');
+        
+        // Primero intentamos sacar el rol de los metadatos del usuario (JWT)
+        let role = data.user.user_metadata?.role;
+        
+        // Si no está en los metadatos, consultamos la base de datos
+        if (!role) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('user_id', data.user.id)
+            .single()
+
+          if (profileError) {
+            console.warn('No se pudo obtener el perfil de DB (posible error de RLS):', profileError.message)
+          } else if (profile) {
+            role = profile.role;
+          }
+        }
+        
+        // Rol por defecto si no se encontró ninguno
+        role = role || 'alumno';
+
+        console.log('Rol final resuelto:', role)
+
+        if (role === 'admin') {
+          toast.success('Bienvenido al panel de Administrador');
+          router.push('/admin');
+        } else if (role === 'profesor') {
+          toast.success('Bienvenido al panel de Profesor');
+          router.push('/profesor');
+        } else {
+          toast.success('Bienvenido al panel de Alumno');
+          router.push('/alumno');
+        }
       }
+    } catch (err: any) {
+      console.error('Excepción en login:', err)
+      toast.error(`Error inesperado: ${err.message || err}`)
     } finally {
       setLoading(false)
     }

@@ -168,10 +168,15 @@ export default function ProfesorRutinasPage() {
     <div className="flex flex-col gap-5 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Mis rutinas</h1>
+          <h1 className="text-2xl font-bold gradient-text pb-1">Mis rutinas</h1>
           <p className="text-sm text-[var(--muted-foreground)]">{rutinas.length} creadas</p>
         </div>
-        <Button onClick={openNew} size="sm"><Plus className="w-4 h-4" />Nueva</Button>
+        <div className="relative">
+          <div className="absolute inset-0 rounded-md animate-pulse-ring pointer-events-none" />
+          <Button onClick={openNew} size="sm" className="relative shadow-lg shadow-[var(--primary)]/20">
+            <Plus className="w-4 h-4 mr-1" />Nueva
+          </Button>
+        </div>
       </div>
 
       <div className="relative">
@@ -190,7 +195,7 @@ export default function ProfesorRutinasPage() {
       ) : (
         <div className="flex flex-col gap-3">
           {filtered.map((rutina) => (
-            <Card key={rutina.id} className="overflow-hidden">
+            <Card key={rutina.id} className="glass overflow-hidden hover:border-[var(--primary)]/40 transition-all">
               <CardContent className="p-0">
                 <div className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-3 min-w-0">
@@ -279,12 +284,12 @@ export default function ProfesorRutinasPage() {
                   <Plus className="w-3.5 h-3.5" />Agregar
                 </Button>
               </div>
-              <div className="flex flex-col gap-3 max-h-[40vh] overflow-y-auto pr-1">
+              <div className="flex flex-col gap-3 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                 {ejercicios.map((ej, i) => (
-                  <div key={i} className="p-3 rounded-xl border border-[var(--border)] bg-[var(--accent)] flex flex-col gap-2.5">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-[var(--primary)]/20 text-[var(--primary)] text-xs font-bold flex items-center justify-center shrink-0">{i + 1}</span>
-                      <Input value={ej.nombre} onChange={e => updateEjercicio(i, 'nombre', e.target.value)} placeholder="Nombre del ejercicio *" className="bg-[var(--input)]" />
+                  <div key={i} className="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)] flex flex-col gap-3 shadow-sm hover:border-[var(--primary)]/30 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-sm font-bold flex items-center justify-center shrink-0 shadow-inner shadow-[var(--primary)]/20">{i + 1}</div>
+                      <Input value={ej.nombre} onChange={e => updateEjercicio(i, 'nombre', e.target.value)} placeholder="Nombre del ejercicio *" className="bg-[var(--background)] font-medium text-base" />
                       {ejercicios.length > 1 && (
                         <button type="button" onClick={() => setEjercicios(p => p.filter((_, idx) => idx !== i))} className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--muted-foreground)] hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0">
                           <Trash2 className="w-3.5 h-3.5" />
@@ -292,20 +297,20 @@ export default function ProfesorRutinasPage() {
                       )}
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="flex flex-col gap-1">
-                        <Label className="text-[10px]">Series</Label>
-                        <Input type="number" min="1" value={ej.series} onChange={e => updateEjercicio(i, 'series', parseInt(e.target.value))} className="bg-[var(--input)] text-center" />
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider">Series</Label>
+                        <Input type="number" min="1" value={ej.series} onChange={e => updateEjercicio(i, 'series', parseInt(e.target.value))} className="bg-[var(--background)] text-center font-semibold" />
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <Label className="text-[10px]">Reps</Label>
-                        <Input value={ej.repeticiones} onChange={e => updateEjercicio(i, 'repeticiones', e.target.value)} placeholder="10" className="bg-[var(--input)]" />
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider">Reps</Label>
+                        <Input value={ej.repeticiones} onChange={e => updateEjercicio(i, 'repeticiones', e.target.value)} placeholder="10" className="bg-[var(--background)] font-semibold" />
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <Label className="text-[10px]">Descanso</Label>
-                        <Input value={ej.descanso} onChange={e => updateEjercicio(i, 'descanso', e.target.value)} placeholder="60s" className="bg-[var(--input)]" />
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider">Descanso</Label>
+                        <Input value={ej.descanso} onChange={e => updateEjercicio(i, 'descanso', e.target.value)} placeholder="60s" className="bg-[var(--background)] font-semibold" />
                       </div>
                     </div>
-                    <Textarea value={ej.observaciones} onChange={e => updateEjercicio(i, 'observaciones', e.target.value)} placeholder="Observaciones..." className="bg-[var(--input)] min-h-[52px]" rows={2} />
+                    <Textarea value={ej.observaciones} onChange={e => updateEjercicio(i, 'observaciones', e.target.value)} placeholder="Observaciones (ej. tempo, técnica)..." className="bg-[var(--background)] min-h-[60px] text-sm resize-none" />
                   </div>
                 ))}
               </div>

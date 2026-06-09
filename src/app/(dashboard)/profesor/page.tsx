@@ -25,34 +25,43 @@ export default async function ProfesorDashboard() {
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold">Mi panel</h1>
-        <p className="text-[var(--muted-foreground)] text-sm mt-0.5">
-          {format(new Date(), "EEEE d 'de' MMMM", { locale: es })}
-        </p>
+      {/* Welcome hero */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--primary)] to-[#b5f23a] p-5">
+        <div className="relative z-10">
+          <p className="text-black/70 text-sm font-medium">Panel de Control</p>
+          <h1 className="text-black text-2xl font-bold mt-0.5">
+            Hola, {profesor?.nombre ?? 'Profe'} 👋
+          </h1>
+          <p className="text-black/60 text-sm mt-1">
+            {format(new Date(), "EEEE d 'de' MMMM", { locale: es })}
+          </p>
+        </div>
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-10">
+          <ClipboardList className="w-24 h-24 text-black" />
+        </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
         <Link href="/profesor/alumnos">
-          <Card className="hover:border-[var(--primary)]/30 transition-all cursor-pointer">
-            <CardContent className="p-4">
-              <div className="w-10 h-10 rounded-xl bg-blue-400/10 flex items-center justify-center mb-3">
-                <Users className="w-5 h-5 text-blue-400" />
+          <Card className="glass hover:border-[var(--primary)]/50 transition-all cursor-pointer h-full">
+            <CardContent className="p-5">
+              <div className="w-12 h-12 rounded-xl bg-blue-400/10 flex items-center justify-center mb-4">
+                <Users className="w-6 h-6 text-blue-400" />
               </div>
-              <p className="text-2xl font-bold">{misAlumnos?.length ?? 0}</p>
-              <p className="text-xs text-[var(--muted-foreground)] mt-0.5">Mis alumnos</p>
+              <p className="text-3xl font-bold">{misAlumnos?.length ?? 0}</p>
+              <p className="text-sm text-[var(--muted-foreground)] mt-1">Mis alumnos</p>
             </CardContent>
           </Card>
         </Link>
         <Link href="/profesor/rutinas">
-          <Card className="hover:border-[var(--primary)]/30 transition-all cursor-pointer">
-            <CardContent className="p-4">
-              <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center mb-3">
-                <ClipboardList className="w-5 h-5 text-[var(--primary)]" />
+          <Card className="glass hover:border-[var(--primary)]/50 transition-all cursor-pointer h-full">
+            <CardContent className="p-5">
+              <div className="w-12 h-12 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center mb-4">
+                <ClipboardList className="w-6 h-6 text-[var(--primary)]" />
               </div>
-              <p className="text-2xl font-bold">{(rutinas as unknown as { count: number })?.count ?? 0}</p>
-              <p className="text-xs text-[var(--muted-foreground)] mt-0.5">Mis rutinas</p>
+              <p className="text-3xl font-bold">{(rutinas as unknown as { count: number })?.count ?? 0}</p>
+              <p className="text-sm text-[var(--muted-foreground)] mt-1">Mis rutinas</p>
             </CardContent>
           </Card>
         </Link>
@@ -70,11 +79,11 @@ export default async function ProfesorDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col divide-y divide-[var(--border)]">
+            <div className="flex flex-col gap-1">
               {misAlumnos.slice(0, 5).map((alumno) => (
-                <div key={alumno.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                <div key={alumno.id} className="flex items-center justify-between p-3 -mx-3 rounded-xl hover:bg-[var(--accent)] transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[var(--accent)] flex items-center justify-center text-sm font-bold text-[var(--primary)]">
+                    <div className="w-9 h-9 rounded-full bg-[var(--primary)]/10 flex items-center justify-center text-sm font-bold text-[var(--primary)]">
                       {alumno.nombre[0]}{alumno.apellido[0]}
                     </div>
                     <p className="text-sm font-medium">{alumno.nombre} {alumno.apellido}</p>
@@ -106,9 +115,9 @@ export default async function ProfesorDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col divide-y divide-[var(--border)]">
+            <div className="flex flex-col gap-1">
               {ultimasRutinas.map((rutina) => (
-                <div key={rutina.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                <div key={rutina.id} className="flex items-center justify-between p-3 -mx-3 rounded-xl hover:bg-[var(--accent)] transition-colors">
                   <div>
                     <p className="text-sm font-medium">{rutina.nombre}</p>
                     {rutina.objetivo && <p className="text-xs text-[var(--muted-foreground)]">{rutina.objetivo}</p>}

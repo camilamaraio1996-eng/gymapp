@@ -94,16 +94,20 @@ create table if not exists public.progreso (
 
 -- RLS Policies
 
+-- Helper function to check if user is an admin without causing infinite recursion in RLS
+create or replace function public.is_admin()
+returns boolean as $$
+begin
+  return coalesce((auth.jwt() -> 'user_metadata' ->> 'role'), '') = 'admin';
+end;
+$$ language plpgsql stable security definer;
+
 -- Profiles
 alter table public.profiles enable row level security;
 create policy "Users can view own profile" on public.profiles for select using (auth.uid() = user_id);
 create policy "Users can update own profile" on public.profiles for update using (auth.uid() = user_id);
-create policy "Admins can view all profiles" on public.profiles for select using (
-  exists (select 1 from public.profiles where user_id = auth.uid() and role = 'admin')
-);
-create policy "Admins can insert profiles" on public.profiles for insert with check (
-  exists (select 1 from public.profiles where user_id = auth.uid() and role = 'admin')
-);
+create policy "Admins can view all profiles" on public.profiles for select using (public.is_admin());
+create policy "Admins can insert profiles" on public.profiles for insert with check (public.is_admin());
 
 -- Profesores
 alter table public.profesores enable row level security;

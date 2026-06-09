@@ -90,8 +90,12 @@ export default async function AlumnoHome() {
           <Card>
             <CardContent className="p-6 text-center">
               <ClipboardList className="w-10 h-10 text-[var(--muted-foreground)] mx-auto mb-2" />
-              <p className="text-sm text-[var(--muted-foreground)]">No tenés rutinas asignadas aún.</p>
-              <p className="text-xs text-[var(--muted-foreground)] mt-1">Tu profesor las configurará pronto.</p>
+              <p className="text-sm text-[var(--muted-foreground)] mb-4">No tenés rutinas asignadas aún.</p>
+              <Link href="/alumno/profesores">
+                <Button variant="outline" size="sm" className="w-full">
+                  Buscar mi profesor y rutina
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         ) : (
