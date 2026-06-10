@@ -30,7 +30,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <SidebarLayout role="admin" userName={`${nombre} ${apellido}`.trim() || 'Admin'}>
-      <div style={{ padding: '28px 32px 48px', maxWidth: 1320 }}>
+      <div className="dash-content" style={{ maxWidth: 1320 }}>
         {children}
       </div>
     </SidebarLayout>

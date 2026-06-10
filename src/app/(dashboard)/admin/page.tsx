@@ -107,7 +107,7 @@ export default async function AdminDashboard() {
       )}
 
       {/* KPI grid */}
-      <div className="stagger" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 20 }}>
+      <div className="kpi-grid stagger" style={{ marginBottom: 20 }}>
         {kpis.map(({ label, value, Icon, iconBg, iconColor, sub, subColor, href }) => (
           <Link key={label} href={href} style={{ textDecoration: 'none' }}>
             <div className="card-hover" style={{ ...card, padding: '20px', cursor: 'pointer' }}>
@@ -129,7 +129,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Main 2-col grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 14, alignItems: 'start' }}>
+      <div className="grid-admin-main">
 
         {/* Registros recientes */}
         <div style={card}>
@@ -152,7 +152,8 @@ export default async function AdminDashboard() {
               <div style={{ fontSize: 12.5, color: 'var(--t3)', marginTop: 4 }}>Los nuevos registros aparecerán acá.</div>
             </div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div className="table-scroll">
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
               <thead>
                 <tr style={{ background: 'rgba(255,255,255,0.016)' }}>
                   {['Alumno', 'Estado', 'Ingreso', ''].map((h, i) => (
@@ -202,6 +203,7 @@ export default async function AdminDashboard() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
 

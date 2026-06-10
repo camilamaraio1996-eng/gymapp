@@ -48,7 +48,7 @@ export default async function ProfesorDashboard() {
       </div>
 
       {/* KPI stats */}
-      <div className="stagger" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div className="grid-2 stagger">
         <Link href="/profesor/alumnos" style={{ textDecoration: 'none' }}>
           <div className="card-hover" style={{ ...card, padding: '20px', cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -80,7 +80,7 @@ export default async function ProfesorDashboard() {
       </div>
 
       {/* Content grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div className="grid-2">
 
         {/* Mis alumnos */}
         <div style={card}>
@@ -188,7 +188,7 @@ export default async function ProfesorDashboard() {
       </div>
 
       {/* Quick actions */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div className="grid-2">
         {[
           { label: 'Nueva rutina',    sub: 'Crear plan de entrenamiento', href: '/profesor/rutinas?new=true', Icon: Dumbbell, iconColor: '#fb923c', iconBg: 'rgba(251,146,60,0.1)' },
           { label: 'Ver mis alumnos', sub: `${alumnosCount} asignados`,    href: '/profesor/alumnos',          Icon: Users,   iconColor: '#60a5fa', iconBg: 'rgba(96,165,250,0.1)'  },

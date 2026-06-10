@@ -32,6 +32,15 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
   if (event.request.url.includes('/api/')) return
   if (event.request.url.includes('supabase')) return
+  
+  // No cachear archivos de desarrollo de Next.js ni websockets
+  if (
+    event.request.url.includes('/_next/') || 
+    event.request.url.includes('/__nextjs') ||
+    event.request.url.includes('hot-update')
+  ) {
+    return
+  }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {

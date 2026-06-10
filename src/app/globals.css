@@ -166,10 +166,14 @@ body {
   .bottom-nav-bar      { display: flex; }
 }
 
-/* Collapsed sidebar tooltips */
+/* Tooltips — hidden everywhere by default */
+.nav-tooltip { display: none; }
+
+/* Show as floating tooltip only on collapsed tablet sidebar */
 @media (min-width: 768px) and (max-width: 1023px) {
   .nav-item-wrap { position: relative; }
   .nav-tooltip {
+    display: block;
     position: absolute; left: calc(100% + 10px); top: 50%;
     transform: translateY(-50%) translateX(-6px);
     background: var(--surface-hover); color: var(--t1);
@@ -184,10 +188,6 @@ body {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
   }
-}
-/* Always hidden on desktop */
-@media (min-width: 1024px) {
-  .nav-tooltip { display: none; }
 }
 
 /* ═══════════════════════════════════════
@@ -299,13 +299,6 @@ body {
 .animate-slide-up   { animation: slideUp 0.35s ease forwards; }
 .animate-slide-left { animation: slideInL 0.22s ease forwards; }
 
-.stagger > *:nth-child(1) { animation-delay:   0ms; }
-.stagger > *:nth-child(2) { animation-delay:  55ms; }
-.stagger > *:nth-child(3) { animation-delay: 110ms; }
-.stagger > *:nth-child(4) { animation-delay: 165ms; }
-.stagger > *:nth-child(5) { animation-delay: 220ms; }
-.stagger > *:nth-child(6) { animation-delay: 275ms; }
-
 .skeleton {
   background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
   background-size: 200% 100%;
@@ -317,4 +310,58 @@ body {
 
 @media (pointer: coarse) {
   button, a, [role="button"] { -webkit-tap-highlight-color: transparent; }
+}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE GRID / LAYOUT UTILITIES
+   ═══════════════════════════════════════ */
+
+/* Dashboard content wrapper */
+.dash-content { padding: 28px 32px 48px; }
+
+/* 4-col KPI row */
+.kpi-grid { display: grid; gap: 14px; grid-template-columns: repeat(4, 1fr); }
+
+/* Standard 2-col card grid */
+.grid-2 { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+
+/* Admin main: wide content + 300px sidebar */
+.grid-admin-main { display: grid; gap: 14px; grid-template-columns: 1fr 300px; align-items: start; }
+
+/* 2-col grid that keeps 2 cols even on mobile (for small cards like "próximamente") */
+.grid-2-fixed { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+
+/* Flex-wrap row for alumno info cards */
+.info-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.info-row > * { flex: 1; min-width: 200px; }
+
+/* Table horizontal scroll on mobile */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* Mobile logout button in topbar */
+.mobile-logout { display: none; }
+
+/* Stagger animation base — children inherit animation, delay is what staggers them */
+.stagger > * { animation: fadeIn 0.25s ease both; }
+.stagger > *:nth-child(1) { animation-delay:   0ms; }
+.stagger > *:nth-child(2) { animation-delay:  55ms; }
+.stagger > *:nth-child(3) { animation-delay: 110ms; }
+.stagger > *:nth-child(4) { animation-delay: 165ms; }
+.stagger > *:nth-child(5) { animation-delay: 220ms; }
+.stagger > *:nth-child(6) { animation-delay: 275ms; }
+
+/* ── TABLET (768–1023px) ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .dash-content    { padding: 24px 24px 40px; }
+  .kpi-grid        { grid-template-columns: 1fr 1fr; }
+  .grid-admin-main { grid-template-columns: 1fr; }
+}
+
+/* ── MOBILE (<768px) ── */
+@media (max-width: 767px) {
+  .dash-content    { padding: 16px 16px 32px; }
+  .kpi-grid        { grid-template-columns: 1fr 1fr; }
+  .grid-2          { grid-template-columns: 1fr; }
+  .grid-admin-main { grid-template-columns: 1fr; }
+  .mobile-logout   { display: flex !important; }
 }

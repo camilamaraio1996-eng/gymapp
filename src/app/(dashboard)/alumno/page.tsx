@@ -97,7 +97,7 @@ export default async function AlumnoHome() {
 
       {/* Info row */}
       {(alumno?.objetivo || prof) && (
-        <div style={{ display: 'grid', gridTemplateColumns: prof && alumno?.objetivo ? '1fr 1fr' : '1fr', gap: 14 }}>
+        <div className="info-row">
           {alumno?.objetivo && (
             <div style={{ ...card, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(170,255,0,0.1)', border: '1px solid rgba(170,255,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -182,7 +182,7 @@ export default async function AlumnoHome() {
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 12 }}>
           Próximamente
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div className="grid-2-fixed">
           {proximosModulos.map(({ label, icon: Icon, desc }) => (
             <div key={label} style={{ ...card, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, opacity: 0.45 }}>
               <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

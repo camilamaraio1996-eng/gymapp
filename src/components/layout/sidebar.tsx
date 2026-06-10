@@ -103,6 +103,111 @@ interface SidebarLayoutProps {
   children: React.ReactNode
 }
 
+interface SidebarContentProps {
+  navGroups: NavGroup[]
+  initials: string
+  userName: string
+  role: UserRole
+  isActive: (item: NavItem) => boolean
+  handleLogout: () => void
+}
+
+function SidebarContent({ navGroups, initials, userName, role, isActive, handleLogout }: SidebarContentProps) {
+  return (
+    <>
+      {/* Logo */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '18px 14px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        flexShrink: 0,
+      }}>
+        <div style={{
+          width: 30, height: 30, background: 'var(--primary)', borderRadius: 8,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <Dumbbell style={{ width: 15, height: 15, strokeWidth: 2.5, color: '#000' }} />
+        </div>
+        <span className="sidebar-label" style={{ fontSize: 15, fontWeight: 600, color: 'var(--t1)', letterSpacing: '-0.01em' }}>GymPro</span>
+      </div>
+
+      {/* Nav */}
+      <nav style={{ flex: 1, padding: '10px 8px', overflowY: 'auto', overflowX: 'hidden' }}>
+        {navGroups.map((group, gi) => (
+          <div key={gi} style={{ marginBottom: 4 }}>
+            {group.label && (
+              <div className="sidebar-group-label" style={{
+                fontSize: 10, fontWeight: 600, color: 'var(--t3)',
+                textTransform: 'uppercase', letterSpacing: '0.09em',
+                padding: '16px 10px 6px',
+              }}>
+                {group.label}
+              </div>
+            )}
+            {group.items.map(item => {
+              const active = isActive(item)
+              const disabled = !!item.pill
+              return (
+                <div key={item.href} className="nav-item-wrap">
+                  <Link
+                    href={disabled ? '#' : item.href}
+                    onClick={disabled ? (e) => e.preventDefault() : undefined}
+                    className={`nav-item-base ${active ? 'nav-active-item' : ''} ${disabled ? 'nav-disabled-item' : ''}`}
+                  >
+                    <span style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <item.icon style={{ width: 15, height: 15, strokeWidth: 1.8 }} />
+                    </span>
+                    <span className="sidebar-label" style={{ flex: 1, fontSize: 13.5 }}>{item.label}</span>
+                    {item.pill && (
+                      <span className="sidebar-label" style={{
+                        fontSize: 9, background: 'rgba(255,255,255,0.06)',
+                        color: 'var(--t3)', borderRadius: 999,
+                        padding: '2px 6px', letterSpacing: '0.04em', fontWeight: 500,
+                      }}>
+                        {item.pill}
+                      </span>
+                    )}
+                  </Link>
+                  <span className="nav-tooltip">{item.label}</span>
+                </div>
+              )
+            })}
+          </div>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div style={{
+        borderTop: '1px solid rgba(255,255,255,0.05)',
+        padding: '12px 10px',
+        display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0,
+      }}>
+        <div style={{
+          width: 30, height: 30, borderRadius: '50%',
+          background: 'rgba(170,255,0,0.1)', border: '1px solid rgba(170,255,0,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 11, fontWeight: 600, color: 'var(--primary)', flexShrink: 0,
+          letterSpacing: '0.02em',
+        }}>
+          {initials}
+        </div>
+        <div className="sidebar-user-info" style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--t1)', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {userName}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--t3)' }}>{roleLabel[role]}</div>
+        </div>
+        <div className="nav-item-wrap">
+          <button onClick={handleLogout} title="Cerrar sesión" className="logout-btn" style={{ flexShrink: 0 }}>
+            <LogOut style={{ width: 14, height: 14 }} />
+          </button>
+          <span className="nav-tooltip">Cerrar sesión</span>
+        </div>
+      </div>
+    </>
+  )
+}
+
 export function SidebarLayout({ role, userName, children }: SidebarLayoutProps) {
   const pathname = usePathname()
 
@@ -132,108 +237,19 @@ export function SidebarLayout({ role, userName, children }: SidebarLayoutProps) 
     window.location.replace('/login')
   }
 
-  function SidebarContent() {
-    return (
-      <>
-        {/* Logo */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '18px 14px 16px',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
-          flexShrink: 0,
-        }}>
-          <div style={{
-            width: 30, height: 30, background: 'var(--primary)', borderRadius: 8,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>
-            <Dumbbell style={{ width: 15, height: 15, strokeWidth: 2.5, color: '#000' }} />
-          </div>
-          <span className="sidebar-label" style={{ fontSize: 15, fontWeight: 600, color: 'var(--t1)', letterSpacing: '-0.01em' }}>GymPro</span>
-        </div>
-
-        {/* Nav */}
-        <nav style={{ flex: 1, padding: '10px 8px', overflowY: 'auto', overflowX: 'hidden' }}>
-          {navGroups.map((group, gi) => (
-            <div key={gi} style={{ marginBottom: 4 }}>
-              {group.label && (
-                <div className="sidebar-group-label" style={{
-                  fontSize: 10, fontWeight: 600, color: 'var(--t3)',
-                  textTransform: 'uppercase', letterSpacing: '0.09em',
-                  padding: '16px 10px 6px',
-                }}>
-                  {group.label}
-                </div>
-              )}
-              {group.items.map(item => {
-                const active = isActive(item)
-                const disabled = !!item.pill
-                return (
-                  <div key={item.href} className="nav-item-wrap">
-                    <Link
-                      href={disabled ? '#' : item.href}
-                      onClick={disabled ? (e) => e.preventDefault() : undefined}
-                      className={`nav-item-base ${active ? 'nav-active-item' : ''} ${disabled ? 'nav-disabled-item' : ''}`}
-                    >
-                      <span style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <item.icon style={{ width: 15, height: 15, strokeWidth: 1.8 }} />
-                      </span>
-                      <span className="sidebar-label" style={{ flex: 1, fontSize: 13.5 }}>{item.label}</span>
-                      {item.pill && (
-                        <span className="sidebar-label" style={{
-                          fontSize: 9, background: 'rgba(255,255,255,0.06)',
-                          color: 'var(--t3)', borderRadius: 999,
-                          padding: '2px 6px', letterSpacing: '0.04em', fontWeight: 500,
-                        }}>
-                          {item.pill}
-                        </span>
-                      )}
-                    </Link>
-                    <span className="nav-tooltip">{item.label}</span>
-                  </div>
-                )
-              })}
-            </div>
-          ))}
-        </nav>
-
-        {/* Footer */}
-        <div style={{
-          borderTop: '1px solid rgba(255,255,255,0.05)',
-          padding: '12px 10px',
-          display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0,
-        }}>
-          <div style={{
-            width: 30, height: 30, borderRadius: '50%',
-            background: 'rgba(170,255,0,0.1)', border: '1px solid rgba(170,255,0,0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 11, fontWeight: 600, color: 'var(--primary)', flexShrink: 0,
-            letterSpacing: '0.02em',
-          }}>
-            {initials}
-          </div>
-          <div className="sidebar-user-info" style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12.5, color: 'var(--t1)', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {userName}
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--t3)' }}>{roleLabel[role]}</div>
-          </div>
-          <div className="nav-item-wrap">
-            <button onClick={handleLogout} title="Cerrar sesión" className="logout-btn" style={{ flexShrink: 0 }}>
-              <LogOut style={{ width: 14, height: 14 }} />
-            </button>
-            <span className="nav-tooltip">Cerrar sesión</span>
-          </div>
-        </div>
-      </>
-    )
-  }
-
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--background)' }}>
 
       {/* Sidebar */}
       <aside className="sidebar-rail">
-        <SidebarContent />
+        <SidebarContent
+          navGroups={navGroups}
+          initials={initials}
+          userName={userName}
+          role={role}
+          isActive={isActive}
+          handleLogout={handleLogout}
+        />
       </aside>
 
       {/* Topbar */}
@@ -302,10 +318,11 @@ export function SidebarLayout({ role, userName, children }: SidebarLayoutProps) 
           {/* Mobile: logout button */}
           <button
             onClick={handleLogout}
+            title="Cerrar sesión"
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
               color: 'var(--t3)', padding: 6, borderRadius: 7,
-              display: 'none', alignItems: 'center',
+              alignItems: 'center',
             }}
             className="mobile-logout"
           >

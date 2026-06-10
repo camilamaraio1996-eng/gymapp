@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GymPro — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:              #111111;
+  --sidebar:         #141414;
+  --card:            #1a1a1a;
+  --card-alt:        #1e1e1e;
+  --border-c:        rgba(255,255,255,0.08);
+  --border-b:        0.5px solid rgba(255,255,255,0.08);
+  --accent:          #c8f135;
+  --accent-hov:      #d6ff44;
+  --t1:              #eeeeee;
+  --t2:              #cccccc;
+  --t3:              #aaaaaa;
+  --t4:              #888888;
+  --t5:              #444444;
+  --success:         #4ade80;
+  --warning:         #fbbf24;
+  --danger:          #f87171;
+  --sidebar-w:       220px;
+  --sidebar-w-tab:   56px;
+  --r-card:          10px;
+  --r-inner:         8px;
+  --r-badge:         6px;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  background: var(--bg);
+  color: var(--t2);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+/* ── APP SHELL ── */
+.app { display: flex; min-height: 100vh; }
+
+/* ═══════════════════════════════
+   SIDEBAR
+═══════════════════════════════ */
+.sidebar {
+  width: var(--sidebar-w);
+  min-height: 100vh;
+  background: var(--sidebar);
+  border-right: var(--border-b);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: width 0.15s ease, transform 0.15s ease;
+  overflow: hidden;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 16px 18px;
+  border-bottom: var(--border-b);
+  min-width: var(--sidebar-w);
+  flex-shrink: 0;
+}
+.logo-icon {
+  width: 30px; height: 30px;
+  background: var(--accent);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.logo-icon svg { width: 15px; height: 15px; stroke-width: 2.2; color: #000; }
+.logo-text { font-size: 15px; font-weight: 500; color: var(--t1); white-space: nowrap; }
+
+.sidebar-nav {
+  flex: 1;
+  padding: 8px 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.nav-group-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--t5);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  padding: 14px 8px 5px;
+  white-space: nowrap;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border-radius: var(--r-inner);
+  cursor: pointer;
+  color: var(--t4);
+  transition: background 0.12s, color 0.12s;
+  position: relative;
+  white-space: nowrap;
+  user-select: none;
+}
+.nav-item:hover { color: var(--t1); background: rgba(255,255,255,0.04); }
+.nav-item.active { background: var(--accent); color: #000; }
+.nav-item.active .nav-icon svg { color: #000; }
+
+.nav-icon {
+  width: 18px; height: 18px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.nav-icon svg { width: 15px; height: 15px; stroke-width: 1.9; }
+.nav-label { font-size: 13px; flex: 1; }
+
+.nav-pill {
+  font-size: 9.5px;
+  background: rgba(255,255,255,0.07);
+  color: var(--t4);
+  border-radius: 4px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+/* Tooltip (tablet only) */
+.nav-tip {
+  display: none;
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%; transform: translateY(-50%);
+  background: #1f1f1f;
+  color: var(--t1);
+  font-size: 12px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: var(--border-b);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* Footer */
+.sidebar-footer {
+  border-top: var(--border-b);
+  padding: 12px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  min-width: var(--sidebar-w);
+  overflow: hidden;
+}
+.s-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: #222;
+  border: 0.5px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 500;
+  color: var(--t3);
+  flex-shrink: 0;
+}
+.s-name { font-size: 12.5px; color: var(--t1); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-role { font-size: 11px; color: var(--t4); }
+
+/* ═══════════════════════════════
+   OVERLAY
+═══════════════════════════════ */
+.overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 99;
+}
+.overlay.show { display: block; }
+
+/* ═══════════════════════════════
+   MAIN
+═══════════════════════════════ */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  min-width: 0;
+  transition: margin-left 0.15s ease;
+}
+
+/* Mobile topbar */
+.topbar {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 50px;
+  border-bottom: var(--border-b);
+  background: var(--sidebar);
+  position: sticky; top: 0; z-index: 50;
+}
+.hamburger {
+  background: none; border: none; cursor: pointer;
+  color: var(--t3); display: flex; align-items: center;
+  padding: 5px; border-radius: 6px;
+  transition: background 0.12s;
+}
+.hamburger:hover { background: rgba(255,255,255,0.06); }
+.topbar-title { font-size: 14px; font-weight: 500; color: var(--t1); }
+
+/* ═══════════════════════════════
+   CONTENT
+═══════════════════════════════ */
+.content { padding: 28px 28px 48px; max-width: 1300px; }
+
+/* Page header */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.page-header-left {}
+.page-title { font-size: 21px; font-weight: 500; color: var(--t1); line-height: 1.2; }
+.page-sub { font-size: 12.5px; color: var(--t4); margin-top: 3px; }
+
+/* Buttons */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--accent);
+  color: #000;
+  font-size: 13px; font-weight: 500;
+  padding: 7px 14px;
+  border-radius: var(--r-inner);
+  border: none; cursor: pointer;
+  transition: background 0.12s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btn-primary:hover { background: var(--accent-hov); }
+.btn-primary svg { width: 14px; height: 14px; stroke-width: 2.2; }
+
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: transparent;
+  border: 0.5px solid rgba(255,255,255,0.1);
+  color: var(--t3);
+  font-size: 12px;
+  padding: 5px 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.05); color: var(--t1); border-color: rgba(255,255,255,0.16); }
+
+/* ═══════════════════════════════
+   STAT CARDS
+═══════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--card);
+  border: var(--border-b);
+  border-radius: var(--r-card);
+  padding: 16px 18px;
+}
+.stat-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+.stat-icon {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.stat-icon svg { width: 15px; height: 15px; stroke-width: 2; }
+.stat-delta { font-size: 11.5px; display: flex; align-items: center; gap: 2px; }
+.stat-delta.up   { color: var(--success); }
+.stat-delta.down { color: var(--danger); }
+.stat-num   { font-size: 28px; font-weight: 500; color: var(--t1); line-height: 1; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+.stat-label { font-size: 12px; color: var(--t4); }
+
+/* ═══════════════════════════════
+   TWO-COLUMN GRID
+═══════════════════════════════ */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 10px;
+  align-items: start;
+}
+
+/* ═══════════════════════════════
+   CARD
+═══════════════════════════════ */
+.card {
+  background: var(--card);
+  border: var(--border-b);
+  border-radius: var(--r-card);
+  overflow: hidden;
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 20px;
+  border-bottom: var(--border-b);
+}
+.card-title { font-size: 13.5px; font-weight: 500; color: var(--t1); }
+.card-link {
+  font-size: 12px; color: var(--t4);
+  cursor: pointer; text-decoration: none;
+  transition: color 0.12s; white-space: nowrap;
+}
+.card-link:hover { color: var(--accent); }
+
+/* ═══════════════════════════════
+   SEARCH INPUT
+═══════════════════════════════ */
+.search-wrap {
+  position: relative;
+  display: flex; align-items: center;
+}
+.search-wrap svg {
+  position: absolute; left: 10px;
+  width: 13px; height: 13px;
+  color: var(--t5); stroke-width: 2; pointer-events: none;
+}
+.search-input {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.1);
+  color: var(--t1);
+  font-family: inherit; font-size: 12.5px;
+  padding: 6px 10px 6px 30px;
+  border-radius: 7px;
+  width: 200px;
+  outline: none;
+  transition: border-color 0.12s, background 0.12s;
+}
+.search-input::placeholder { color: var(--t5); }
+.search-input:focus { border-color: rgba(200,241,53,0.35); background: rgba(255,255,255,0.06); }
+
+/* ═══════════════════════════════
+   FILTER TABS
+═══════════════════════════════ */
+.filter-tabs {
+  display: flex; gap: 4px;
+  padding: 10px 20px;
+  border-bottom: var(--border-b);
+  overflow-x: auto;
+}
+.filter-tab {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--t4);
+  border: none; font-family: inherit;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.filter-tab:hover { background: rgba(255,255,255,0.05); color: var(--t1); }
+.filter-tab.active { background: rgba(200,241,53,0.12); color: var(--accent); }
+.filter-tab-count {
+  font-size: 10px; font-weight: 400;
+  background: rgba(255,255,255,0.07);
+  border-radius: 4px; padding: 1px 5px;
+  color: var(--t4);
+}
+.filter-tab.active .filter-tab-count { background: rgba(200,241,53,0.2); color: var(--accent); }
+
+/* ═══════════════════════════════
+   TABLE
+═══════════════════════════════ */
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  text-align: left;
+  font-size: 10.5px; font-weight: 500;
+  color: var(--t5);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.018);
+  white-space: nowrap;
+}
+tbody tr { border-top: 0.5px solid rgba(255,255,255,0.055); transition: background 0.12s; }
+tbody tr:hover { background: rgba(255,255,255,0.022); }
+tbody td { padding: 11px 20px; font-size: 13px; color: var(--t2); vertical-align: middle; }
+.td-name { font-weight: 500; color: var(--t1); line-height: 1.3; }
+.td-sub  { font-size: 11.5px; color: var(--t4); margin-top: 1px; }
+.td-muted { color: var(--t3); font-size: 12.5px; }
+
+/* No results */
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--t5); font-size: 13px;
+}
+
+/* ═══════════════════════════════
+   BADGES
+═══════════════════════════════ */
+.badge {
+  display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 500;
+  padding: 2px 8px;
+  border-radius: var(--r-badge);
+  white-space: nowrap;
+}
+.badge-green  { background: rgba(74,222,128,0.11);  color: #4ade80; }
+.badge-yellow { background: rgba(251,191,36,0.11);  color: #fbbf24; }
+.badge-red    { background: rgba(248,113,113,0.11); color: #f87171; }
+.badge-blue   { background: rgba(99,179,237,0.11);  color: #63b3ed; }
+.badge-gray   { background: rgba(255,255,255,0.07); color: var(--t4); }
+
+/* ═══════════════════════════════
+   RIGHT PANEL
+═══════════════════════════════ */
+.right-col { display: flex; flex-direction: column; gap: 10px; }
+
+.action-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 0.12s;
+  border-top: 0.5px solid rgba(255,255,255,0.055);
+  background: transparent; border-left: none; border-right: none; border-bottom: none;
+  width: 100%; text-align: left; font-family: inherit;
+}
+.action-btn:first-child { border-top: none; }
+.action-btn:hover { background: rgba(255,255,255,0.03); }
+.action-icon-wrap {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.action-icon-wrap svg { width: 14px; height: 14px; stroke-width: 2; }
+.action-label { font-size: 13px; color: var(--t1); font-weight: 500; }
+.action-sub   { font-size: 11.5px; color: var(--t4); margin-top: 1px; }
+.action-arrow { color: var(--t5); margin-left: auto; }
+.action-arrow svg { width: 13px; height: 13px; stroke-width: 2; }
+
+/* Activity */
+.activity-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 20px;
+  border-top: 0.5px solid rgba(255,255,255,0.05);
+}
+.activity-item:first-child { border-top: none; }
+.dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  margin-top: 5px; flex-shrink: 0;
+}
+.activity-text { font-size: 12.5px; color: var(--t3); line-height: 1.45; }
+.activity-text b { color: var(--t1); font-weight: 500; }
+.activity-time { font-size: 11px; color: var(--t5); margin-top: 2px; }
+
+/* ═══════════════════════════════
+   SECTION VISIBILITY
+═══════════════════════════════ */
+.section-page { display: none; }
+.section-page.active { display: block; }
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 56px 20px; color: var(--t5);
+}
+.empty-state svg { width: 34px; height: 34px; margin: 0 auto 12px; display: block; opacity: 0.3; }
+.empty-state p { font-size: 13.5px; }
+
+/* ═══════════════════════════════
+   MEMBER GRID (Profesores)
+═══════════════════════════════ */
+.member-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 8px;
+  padding: 16px 20px;
+}
+.member-card {
+  background: var(--card-alt);
+  border: var(--border-b);
+  border-radius: var(--r-inner);
+  padding: 14px 14px;
+  display: flex; align-items: center; gap: 12px;
+  transition: border-color 0.12s;
+}
+.member-card:hover { border-color: rgba(255,255,255,0.14); }
+.m-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: #252525;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 500; color: var(--t3);
+  flex-shrink: 0;
+}
+.m-name { font-size: 13px; font-weight: 500; color: var(--t1); }
+.m-meta { font-size: 11.5px; color: var(--t4); margin-top: 2px; }
+
+/* ═══════════════════════════════
+   SETTINGS
+═══════════════════════════════ */
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 0.5px solid rgba(255,255,255,0.055);
+}
+.settings-row:first-child { border-top: none; }
+.s-label { font-size: 13.5px; color: var(--t1); }
+.s-sub   { font-size: 12px; color: var(--t4); margin-top: 2px; }
+.toggle {
+  width: 36px; height: 20px; border-radius: 10px;
+  background: #2a2a2a; border: none; cursor: pointer;
+  position: relative; transition: background 0.15s; flex-shrink: 0;
+}
+.toggle.on { background: var(--accent); }
+.toggle::after {
+  content: ''; position: absolute;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #000; top: 3px; left: 3px;
+  transition: transform 0.15s;
+}
+.toggle.on::after { transform: translateX(16px); }
+
+/* ═══════════════════════════════
+   ALERT BANNER
+═══════════════════════════════ */
+.alert-banner {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(251,191,36,0.08);
+  border: 0.5px solid rgba(251,191,36,0.22);
+  border-radius: var(--r-inner);
+  padding: 10px 14px;
+  margin-bottom: 20px;
+  font-size: 13px; color: #fbbf24;
+}
+.alert-banner svg { width: 15px; height: 15px; stroke-width: 2; flex-shrink: 0; }
+.alert-banner a { color: #fbbf24; font-weight: 500; text-decoration: underline; cursor: pointer; }
+
+/* ═══════════════════════════════
+   REPORTES MINI CHART
+═══════════════════════════════ */
+.mini-bars {
+  display: flex; align-items: flex-end; gap: 3px; height: 36px;
+}
+.mini-bar {
+  flex: 1; border-radius: 3px 3px 0 0;
+  background: rgba(200,241,53,0.15);
+  transition: background 0.12s;
+}
+.mini-bar:last-child { background: var(--accent); }
+.mini-bar:hover { background: rgba(200,241,53,0.35); }
+
+/* ═══════════════════════════════
+   RESPONSIVE — TABLET
+═══════════════════════════════ */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .sidebar { width: var(--sidebar-w-tab); }
+  .logo-text, .nav-label, .nav-pill,
+  .nav-group-label, .s-name, .s-role { display: none; }
+  .sidebar-logo { justify-content: center; padding: 18px 0; min-width: var(--sidebar-w-tab); }
+  .sidebar-footer { justify-content: center; min-width: var(--sidebar-w-tab); padding: 12px 0; }
+  .nav-item { justify-content: center; padding: 9px; }
+  .nav-item:hover .nav-tip { display: block; }
+  .main { margin-left: var(--sidebar-w-tab); }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════
+   RESPONSIVE — MOBILE
+═══════════════════════════════ */
+@media (max-width: 767px) {
+  .sidebar { transform: translateX(-100%); width: var(--sidebar-w); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .topbar { display: flex; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .main-grid { grid-template-columns: 1fr; }
+  .content { padding: 18px 14px 40px; }
+  thead th:nth-child(3), tbody td:nth-child(3) { display: none; }
+  .search-input { width: 150px; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .page-header { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+<div class="app">
+
+<!-- ═══════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <i data-lucide="dumbbell"></i>
+    </div>
+    <span class="logo-text">GymPro</span>
+  </div>
+
+  <nav class="sidebar-nav">
+
+    <div class="nav-group-label">Principal</div>
+
+    <div class="nav-item active" data-section="dashboard">
+      <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
+      <span class="nav-label">Dashboard</span>
+      <span class="nav-tip">Dashboard</span>
+    </div>
+    <div class="nav-item" data-section="alumnos">
+      <span class="nav-icon"><i data-lucide="users"></i></span>
+      <span class="nav-label">Alumnos</span>
+      <span class="nav-tip">Alumnos</span>
+    </div>
+    <div class="nav-item" data-section="profesores">
+      <span class="nav-icon"><i data-lucide="user-check"></i></span>
+      <span class="nav-label">Profesores</span>
+      <span class="nav-tip">Profesores</span>
+    </div>
+    <div class="nav-item" data-section="rutinas">
+      <span class="nav-icon"><i data-lucide="clipboard-list"></i></span>
+      <span class="nav-label">Rutinas</span>
+      <span class="nav-tip">Rutinas</span>
+    </div>
+
+    <div class="nav-group-label">Módulos</div>
+
+    <div class="nav-item" data-section="asistencia">
+      <span class="nav-icon"><i data-lucide="calendar-check"></i></span>
+      <span class="nav-label">Asistencia</span>
+      <span class="nav-pill">pronto</span>
+      <span class="nav-tip">Asistencia</span>
+    </div>
+    <div class="nav-item" data-section="progreso">
+      <span class="nav-icon"><i data-lucide="trending-up"></i></span>
+      <span class="nav-label">Progreso</span>
+      <span class="nav-pill">pronto</span>
+      <span class="nav-tip">Progreso</span>
+    </div>
+    <div class="nav-item" data-section="reportes">
+      <span class="nav-icon"><i data-lucide="bar-chart-2"></i></span>
+      <span class="nav-label">Reportes</span>
+      <span class="nav-pill">beta</span>
+      <span class="nav-tip">Reportes</span>
+    </div>
+
+    <div class="nav-group-label">Sistema</div>
+
+    <div class="nav-item" data-section="config">
+      <span class="nav-icon"><i data-lucide="settings"></i></span>
+      <span class="nav-label">Configuración</span>
+      <span class="nav-tip">Configuración</span>
+    </div>
+
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="s-avatar">TM</div>
+    <div style="min-width:0">
+      <div class="s-name">Thiago Mendoza</div>
+      <div class="s-role">Owner</div>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ═══════════════════════════════════════
+     MAIN
+═══════════════════════════════════════ -->
+<div class="main">
+
+  <!-- Mobile topbar -->
+  <div class="topbar">
+    <button class="hamburger" id="hamburger">
+      <i data-lucide="menu" style="width:19px;height:19px;stroke-width:1.8"></i>
+    </button>
+    <span class="topbar-title" id="topbar-title">Dashboard</span>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══════════════════════════════
+         DASHBOARD
+    ═══════════════════════════════ -->
+    <div class="section-page active" id="sec-dashboard">
+
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Dashboard</div>
+          <div class="page-sub">Lunes 9 de junio, 2026 &mdash; resumen del gimnasio</div>
+        </div>
+      </div>
+
+      <!-- Alerta alumnos sin rutina -->
+      <div class="alert-banner">
+        <i data-lucide="alert-triangle"></i>
+        <span>18 alumnos no tienen rutina asignada. <a data-section="alumnos">Ver alumnos →</a></span>
+      </div>
+
+      <!-- KPIs -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-head">
+            <div class="stat-icon" style="background:rgba(200,241,53,0.1)">
+              <i data-lucide="users" style="color:#c8f135;width:15px;height:15px;stroke-width:2"></i>
+            </div>
+            <span class="stat-delta up">↑ 8%</span>
+          </div>
+          <div class="stat-num">142</div>
+          <div class="stat-label">Alumnos activos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-head">
+            <div class="stat-icon" style="background:rgba(99,179,237,0.1)">
+              <i data-lucide="user-check" style="color:#63b3ed;width:15px;height:15px;stroke-width:2"></i>
+            </div>
+            <span class="stat-delta up">↑ 1</span>
+          </div>
+          <div class="stat-num">11</div>
+          <div class="stat-label">Profesores</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-head">
+            <div class="stat-icon" style="background:rgba(251,191,36,0.1)">
+              <i data-lucide="clipboard-list" style="color:#fbbf24;width:15px;height:15px;stroke-width:2"></i>
+            </div>
+            <span class="stat-delta down">↓ 3%</span>
+          </div>
+          <div class="stat-num">67</div>
+          <div class="stat-label">Rutinas activas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-head">
+            <div class="stat-icon" style="background:rgba(248,113,113,0.1)">
+              <i data-lucide="alert-circle" style="color:#f87171;width:15px;height:15px;stroke-width:2"></i>
+            </div>
+            <span class="stat-delta down">↑ 2</span>
+          </div>
+          <div class="stat-num">18</div>
+          <div class="stat-label">Sin rutina</div>
+        </div>
+      </div>
+
+      <!-- Grid principal -->
+      <div class="main-grid">
+
+        <!-- Tabla recientes -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Registros recientes</span>
+            <a class="card-link" data-section="alumnos">Ver todos →</a>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Alumno</th>
+                <th>Estado</th>
+                <th>Ingreso</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="td-name">Valentina Ríos</div><div class="td-sub">val.rios@gmail.com</div></td>
+                <td><span class="badge badge-green">Activa</span></td>
+                <td class="td-muted">04 jun 2026</td>
+                <td><button class="btn-ghost">Ver</button></td>
+              </tr>
+              <tr>
+                <td><div class="td-name">Mateo Giménez</div><div class="td-sub">mateogimenez@hotmail.com</div></td>
+                <td><span class="badge badge-yellow">Sin rutina</span></td>
+                <td class="td-muted">03 jun 2026</td>
+                <td><button class="btn-ghost">Ver</button></td>
+              </tr>
+              <tr>
+                <td><div class="td-name">Luciana Pereyra</div><div class="td-sub">lu.pereyra@gmail.com</div></td>
+                <td><span class="badge badge-green">Activa</span></td>
+                <td class="td-muted">02 jun 2026</td>
+                <td><button class="btn-ghost">Ver</button></td>
+              </tr>
+              <tr>
+                <td><div class="td-name">Federico Zalazar</div><div class="td-sub">fede.zal@yahoo.com</div></td>
+                <td><span class="badge badge-red">Inactivo</span></td>
+                <td class="td-muted">28 may 2026</td>
+                <td><button class="btn-ghost">Ver</button></td>
+              </tr>
+              <tr>
+                <td><div class="td-name">Camila Ibáñez</div><div class="td-sub">cami.ibañez@gmail.com</div></td>
+                <td><span class="badge badge-green">Activa</span></td>
+                <td class="td-muted">25 may 2026</td>
+                <td><button class="btn-ghost">Ver</button></td>
+              </tr>
+              <tr>
+                <td><div class="td-name">Rodrigo Altamirano</div><div class="td-sub">rodri.alta@gmail.com</div></td>
+                <td><span class="badge badge-yellow">Sin rutina</span></td>
+                <td class="td-muted">22 may 2026</td>
+                <td><button class="btn-ghost">Ver</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Columna derecha -->
+        <div class="right-col">
+
+          <!-- Acciones rápidas -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Acciones rápidas</span>
+            </div>
+            <button class="action-btn" data-section="alumnos">
+              <div class="action-icon-wrap" style="background:rgba(200,241,53,0.1)">
+                <i data-lucide="user-plus" style="color:#c8f135;width:14px;height:14px;stroke-width:2"></i>
+              </div>
+              <div style="flex:1">
+                <div class="action-label">Nuevo alumno</div>
+                <div class="action-sub">Registrar en el sistema</div>
+              </div>
+              <span class="action-arrow"><i data-lucide="chevron-right"></i></span>
+            </button>
+            <button class="action-btn" data-section="rutinas">
+              <div class="action-icon-wrap" style="background:rgba(99,179,237,0.1)">
+                <i data-lucide="plus-circle" style="color:#63b3ed;width:14px;height:14px;stroke-width:2"></i>
+              </div>
+              <div style="flex:1">
+                <div class="action-label">Crear rutina</div>
+                <div class="action-sub">Armar plan de entrenamiento</div>
+              </div>
+              <span class="action-arrow"><i data-lucide="chevron-right"></i></span>
+            </button>
+            <button class="action-btn" data-section="profesores">
+              <div class="action-icon-wrap" style="background:rgba(251,191,36,0.1)">
+                <i data-lucide="user-check" style="color:#fbbf24;width:14px;height:14px;stroke-width:2"></i>
+              </div>
+              <div style="flex:1">
+                <div class="action-label">Ver profesores</div>
+                <div class="action-sub">11 activos este mes</div>
+              </div>
+              <span class="action-arrow"><i data-lucide="chevron-right"></i></span>
+            </button>
+            <button class="action-btn" data-section="reportes">
+              <div class="action-icon-wrap" style="background:rgba(167,139,250,0.1)">
+                <i data-lucide="bar-chart-2" style="color:#a78bfa;width:14px;height:14px;stroke-width:2"></i>
+              </div>
+              <div style="flex:1">
+                <div class="action-label">Ver reportes</div>
+                <div class="action-sub">Estadísticas del mes</div>
+              </div>
+              <span class="action-arrow"><i data-lucide="chevron-right"></i></span>
+            </button>
+          </div>
+
+          <!-- Actividad reciente -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Actividad reciente</span>
+            </div>
+            <div class="activity-item">
+              <div class="dot" style="background:#c8f135"></div>
+              <div><div class="activity-text"><b>Valentina Ríos</b> fue asignada a Prof. Torres</div><div class="activity-time">Hace 12 min</div></div>
+            </div>
+            <div class="activity-item">
+              <div class="dot" style="background:#63b3ed"></div>
+              <div><div class="activity-text"><b>Luciana Pereyra</b> completó rutina de piernas</div><div class="activity-time">Hace 38 min</div></div>
+            </div>
+            <div class="activity-item">
+              <div class="dot" style="background:#fbbf24"></div>
+              <div><div class="activity-text">Rutina <b>"Full Body A"</b> actualizada por Prof. Gómez</div><div class="activity-time">Hace 1 hora</div></div>
+            </div>
+            <div class="activity-item">
+              <div class="dot" style="background:#f87171"></div>
+              <div><div class="activity-text"><b>Federico Zalazar</b> marcado como inactivo</div><div class="activity-time">Hace 2 horas</div></div>
+            </div>
+            <div class="activity-item">
+              <div class="dot" style="background:#a78bfa"></div>
+              <div><div class="activity-text">Nuevo profesor <b>Damián Ríos</b> creado</div><div class="activity-time">Ayer, 18:30</div></div>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /main-grid -->
+    </div><!-- /sec-dashboard -->
+
+
+    <!-- ═══════════════════════════════
+         ALUMNOS
+    ═══════════════════════════════ -->
+    <div class="section-page" id="sec-alumnos">
+
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Alumnos</div>
+          <div class="page-sub">142 registrados &middot; 18 sin rutina asignada</div>
+        </div>
+        <button class="btn-primary">
+          <i data-lucide="user-plus"></i>
+          Nuevo alumno
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Todos los alumnos</span>
+          <div class="search-wrap">
+            <i data-lucide="search"></i>
+            <input class="search-input" id="alumno-search" placeholder="Buscar alumno…" autocomplete="off" />
+          </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="todos">Todos <span class="filter-tab-count">142</span></button>
+          <button class="filter-tab" data-filter="activo">Activos <span class="filter-tab-count">112</span></button>
+          <button class="filter-tab" data-filter="sin-rutina">Sin rutina <span class="filter-tab-count">18</span></button>
+          <button class="filter-tab" data-filter="inactivo">Inactivos <span class="filter-tab-count">12</span></button>
+        </div>
+
+        <table id="alumno-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Profesor</th>
+              <th>Estado</th>
+              <th>Inscripción</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="alumno-tbody">
+            <tr data-status="activo">
+              <td><div class="td-name">Valentina Ríos</div><div class="td-sub">val.rios@gmail.com</div></td>
+              <td class="td-muted">Prof. Torres</td>
+              <td><span class="badge badge-green">Activa</span></td>
+              <td class="td-muted">04 jun 2026</td>
+              <td><button class="btn-ghost">Editar</button></td>
+            </tr>
+            <tr data-status="sin-rutina">
+              <td><div class="td-name">Mateo Giménez</div><div class="td-sub">mateogimenez@hotmail.com</div></td>
+              <td class="td-muted">—</td>
+              <td><span class="badge badge-yellow">Sin rutina</span></td>
+              <td class="td-muted">03 jun 2026</td>
+              <td><button class="btn-ghost">Editar</button></td>
+            </tr>
+            <tr data-status="activo">
+              <td><div class="td-name">Luciana Pereyra</div><div class="td-sub">lu.pereyra@gmail.com</div></td>
+              <td class="td-muted">Prof. Gómez</td>
+              <td><span class="badge badge-green">Activa</span></td>
+              <td class="td-muted">02 jun 2026</td>
+              <td><button class="btn-ghost">Editar</button></td>
+            </tr>
+            <tr data-status="inactivo">
+              <td><div class="td-name">Federico Zalazar</div><div class="td-sub">fede.zal@yahoo.com</div></td>
+              <td class="td-muted">Prof. Torres</td>
+              <td><span class="badge badge-red">Inactivo</span></td>
+              <td class="td-muted">28 may 2026</td>
+              <td><button class="btn-ghost">Editar</button></td>
+            </tr>
+            <tr data-status="activo">
+              <td><div class="td-name">Camila Ibáñez</div><div class="td-sub">cami.ibañez@gmail.com</div></td>
+              <td class="td-muted">Prof. Ríos</td>
+              <td><span class="badge badge-green">Activa</span></td>
+              <td class="td-muted">25 may 2026</td>
+              <td><button class="btn-ghost">Editar</button></td>
+            </tr>
+            <tr data-status="sin-rutina">
+              <td><div class="td-name">Rodrigo Altamirano</div><div class="td-sub">rodri.alta@gmail.com</div></td>
+              <td class="td-muted">—</td>
+              <td><span class="badge badge-yellow">Sin rutina</span></td>
+              <td class="td-muted">22 may 2026</td>
+              <td><button class="btn-ghost">Editar</button></td>
+            </tr>
+            <tr data-status="activo">
+              <td><div class="td-name">Sofía Delgado</div><div class="td-sub">sofi.delgado@gmail.com</div></td>
+              <td class="td-muted">Prof. Gómez</td>
+              <td><span class="badge badge-green">Activa</span></td>
+              <td class="td-muted">18 may 2026</td>
+              <td><button class="btn-ghost">Editar</button></td>
+            </tr>
+            <tr data-status="activo">
+              <td><div class="td-name">Bruno Castañeda</div><div class="td-sub">bcastaneda@gmail.com</div></td>
+              <td class="td-muted">Prof. Barreiro</td>
+              <td><span class="badge badge-green">Activo</span></td>
+              <td class="td-muted">14 may 2026</td>
+              <td><button class="btn-ghost">Editar</button></td>
+            </tr>
+            <tr data-status="inactivo">
+              <td><div class="td-name">Milagros Soria</div><div class="td-sub">mili.soria@hotmail.com</div></td>
+              <td class="td-muted">Prof. Vera</td>
+              <td><span class="badge badge-red">Inactiva</span></td>
+              <td class="td-muted">08 may 2026</td>
+              <td><button class="btn-ghost">Editar</button></td>
+            </tr>
+            <tr data-status="sin-rutina">
+              <td><div class="td-name">Ezequiel Romero</div><div class="td-sub">eze.romero@gmail.com</div></td>
+              <td class="td-muted">—</td>
+              <td><span class="badge badge-yellow">Sin rutina</span></td>
+              <td class="td-muted">03 may 2026</td>
+              <td><button class="btn-ghost">Editar</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="no-results" id="no-results" style="display:none">No se encontraron alumnos.</div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════
+         PROFESORES
+    ═══════════════════════════════ -->
+    <div class="section-page" id="sec-profesores">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Profesores</div>
+          <div class="page-sub">11 profesores activos este mes</div>
+        </div>
+        <button class="btn-primary">
+          <i data-lucide="user-plus"></i>
+          Nuevo profesor
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Plantel docente</span></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Especialidad</th>
+              <th>Alumnos</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><div class="td-name">Ana Torres</div><div class="td-sub">ana.torres@gympro.ar</div></td><td class="td-muted">Funcional</td><td class="td-muted">14</td><td><span class="badge badge-green">Activa</span></td><td><button class="btn-ghost">Ver</button></td></tr>
+            <tr><td><div class="td-name">Marcos Gómez</div><div class="td-sub">marcos.gomez@gympro.ar</div></td><td class="td-muted">Musculación</td><td class="td-muted">22</td><td><span class="badge badge-green">Activo</span></td><td><button class="btn-ghost">Ver</button></td></tr>
+            <tr><td><div class="td-name">Damián Ríos</div><div class="td-sub">damian.rios@gympro.ar</div></td><td class="td-muted">CrossFit</td><td class="td-muted">8</td><td><span class="badge badge-green">Activo</span></td><td><button class="btn-ghost">Ver</button></td></tr>
+            <tr><td><div class="td-name">Paula Vera</div><div class="td-sub">paula.vera@gympro.ar</div></td><td class="td-muted">Yoga</td><td class="td-muted">17</td><td><span class="badge badge-green">Activa</span></td><td><button class="btn-ghost">Ver</button></td></tr>
+            <tr><td><div class="td-name">Nicolás Barreiro</div><div class="td-sub">nico.barreiro@gympro.ar</div></td><td class="td-muted">Cardio</td><td class="td-muted">11</td><td><span class="badge badge-green">Activo</span></td><td><button class="btn-ghost">Ver</button></td></tr>
+            <tr><td><div class="td-name">Laura Castillo</div><div class="td-sub">laura.castillo@gympro.ar</div></td><td class="td-muted">Pilates</td><td class="td-muted">19</td><td><span class="badge badge-green">Activa</span></td><td><button class="btn-ghost">Ver</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════
+         RUTINAS
+    ═══════════════════════════════ -->
+    <div class="section-page" id="sec-rutinas">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Rutinas</div>
+          <div class="page-sub">67 activas &middot; Última actualización hace 1 hora</div>
+        </div>
+        <button class="btn-primary">
+          <i data-lucide="plus"></i>
+          Nueva rutina
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Todas las rutinas</span></div>
+        <table>
+          <thead>
+            <tr><th>Nombre</th><th>Profesor</th><th>Días</th><th>Alumnos</th><th>Estado</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr><td><div class="td-name">Full Body A</div></td><td class="td-muted">Prof. Gómez</td><td class="td-muted">Lun / Mié / Vie</td><td class="td-muted">12</td><td><span class="badge badge-green">Activa</span></td><td><button class="btn-ghost">Ver</button></td></tr>
+            <tr><td><div class="td-name">Tren superior B</div></td><td class="td-muted">Prof. Torres</td><td class="td-muted">Mar / Jue</td><td class="td-muted">7</td><td><span class="badge badge-green">Activa</span></td><td><button class="btn-ghost">Ver</button></td></tr>
+            <tr><td><div class="td-name">Cardio HIIT</div></td><td class="td-muted">Prof. Barreiro</td><td class="td-muted">Sáb</td><td class="td-muted">15</td><td><span class="badge badge-yellow">En revisión</span></td><td><button class="btn-ghost">Ver</button></td></tr>
+            <tr><td><div class="td-name">Iniciación funcional</div></td><td class="td-muted">Prof. Torres</td><td class="td-muted">Lun / Mié</td><td class="td-muted">9</td><td><span class="badge badge-green">Activa</span></td><td><button class="btn-ghost">Ver</button></td></tr>
+            <tr><td><div class="td-name">Pilates nivel 1</div></td><td class="td-muted">Prof. Castillo</td><td class="td-muted">Mar / Jue / Sáb</td><td class="td-muted">18</td><td><span class="badge badge-green">Activa</span></td><td><button class="btn-ghost">Ver</button></td></tr>
+            <tr><td><div class="td-name">Fuerza + Movilidad</div></td><td class="td-muted">Prof. Ríos</td><td class="td-muted">Vie</td><td class="td-muted">5</td><td><span class="badge badge-blue">Nueva</span></td><td><button class="btn-ghost">Ver</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════
+         REPORTES
+    ═══════════════════════════════ -->
+    <div class="section-page" id="sec-reportes">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Reportes</div>
+          <div class="page-sub">Estadísticas de junio 2026 &middot; <span class="badge badge-gray">Beta</span></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:10px">
+        <div class="card" style="padding:20px">
+          <div style="font-size:11.5px;color:var(--t4);margin-bottom:8px">Alumnos nuevos (jun)</div>
+          <div style="font-size:30px;font-weight:500;color:var(--t1);margin-bottom:8px">23</div>
+          <div class="mini-bars">
+            <div class="mini-bar" style="height:40%"></div><div class="mini-bar" style="height:55%"></div>
+            <div class="mini-bar" style="height:45%"></div><div class="mini-bar" style="height:70%"></div>
+            <div class="mini-bar" style="height:60%"></div><div class="mini-bar" style="height:80%"></div>
+            <div class="mini-bar" style="height:100%"></div>
+          </div>
+          <div style="font-size:11.5px;color:var(--success);margin-top:6px">↑ 15% vs mayo</div>
+        </div>
+        <div class="card" style="padding:20px">
+          <div style="font-size:11.5px;color:var(--t4);margin-bottom:8px">Tasa de retención</div>
+          <div style="font-size:30px;font-weight:500;color:var(--t1);margin-bottom:8px">87%</div>
+          <div class="mini-bars">
+            <div class="mini-bar" style="height:90%"></div><div class="mini-bar" style="height:92%"></div>
+            <div class="mini-bar" style="height:88%"></div><div class="mini-bar" style="height:91%"></div>
+            <div class="mini-bar" style="height:89%"></div><div class="mini-bar" style="height:90%"></div>
+            <div class="mini-bar" style="height:87%"></div>
+          </div>
+          <div style="font-size:11.5px;color:var(--danger);margin-top:6px">↓ 2% vs mayo</div>
+        </div>
+        <div class="card" style="padding:20px">
+          <div style="font-size:11.5px;color:var(--t4);margin-bottom:8px">Asistencias del mes</div>
+          <div style="font-size:30px;font-weight:500;color:var(--t1);margin-bottom:8px">1,840</div>
+          <div class="mini-bars">
+            <div class="mini-bar" style="height:55%"></div><div class="mini-bar" style="height:65%"></div>
+            <div class="mini-bar" style="height:70%"></div><div class="mini-bar" style="height:60%"></div>
+            <div class="mini-bar" style="height:80%"></div><div class="mini-bar" style="height:75%"></div>
+            <div class="mini-bar" style="height:100%"></div>
+          </div>
+          <div style="font-size:11.5px;color:var(--success);margin-top:6px">↑ 6% vs mayo</div>
+        </div>
+        <div class="card" style="padding:20px">
+          <div style="font-size:11.5px;color:var(--t4);margin-bottom:8px">Ingresos del mes</div>
+          <div style="font-size:30px;font-weight:500;color:var(--t1);margin-bottom:8px">$284k</div>
+          <div class="mini-bars">
+            <div class="mini-bar" style="height:60%"></div><div class="mini-bar" style="height:68%"></div>
+            <div class="mini-bar" style="height:72%"></div><div class="mini-bar" style="height:79%"></div>
+            <div class="mini-bar" style="height:85%"></div><div class="mini-bar" style="height:90%"></div>
+            <div class="mini-bar" style="height:100%"></div>
+          </div>
+          <div style="font-size:11.5px;color:var(--success);margin-top:6px">↑ 11% vs mayo</div>
+        </div>
+      </div>
+      <div class="card" style="padding:36px;text-align:center">
+        <div style="color:var(--t5);font-size:13px">Gráficos de evolución mensual disponibles próximamente</div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════
+         CONFIGURACIÓN
+    ═══════════════════════════════ -->
+    <div class="section-page" id="sec-config">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Configuración</div>
+          <div class="page-sub">Preferencias del sistema y de la cuenta</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">General</span></div>
+        <div class="settings-row">
+          <div><div class="s-label">Nombre del gimnasio</div><div class="s-sub">GymPro — sede central</div></div>
+          <button class="btn-ghost">Editar</button>
+        </div>
+        <div class="settings-row">
+          <div><div class="s-label">Notificaciones por email</div><div class="s-sub">Recibir alertas de nuevos alumnos</div></div>
+          <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="settings-row">
+          <div><div class="s-label">Alertas de inactividad</div><div class="s-sub">Avisar si un alumno no entrena en 7 días</div></div>
+          <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="settings-row">
+          <div><div class="s-label">Modo mantenimiento</div><div class="s-sub">Bloquear acceso a alumnos y profesores</div></div>
+          <button class="toggle" onclick="this.classList.toggle('on')"></button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════
+         PRONTO
+    ═══════════════════════════════ -->
+    <div class="section-page" id="sec-asistencia">
+      <div class="page-header"><div class="page-header-left"><div class="page-title">Asistencia</div><div class="page-sub">Módulo en desarrollo</div></div></div>
+      <div class="card"><div class="empty-state">
+        <i data-lucide="calendar-check"></i>
+        <p>El módulo de asistencia estará disponible pronto.</p>
+        <span class="badge badge-gray" style="margin-top:10px;display:inline-block">Pronto</span>
+      </div></div>
+    </div>
+
+    <div class="section-page" id="sec-progreso">
+      <div class="page-header"><div class="page-header-left"><div class="page-title">Progreso</div><div class="page-sub">Módulo en desarrollo</div></div></div>
+      <div class="card"><div class="empty-state">
+        <i data-lucide="trending-up"></i>
+        <p>Seguimiento de progreso físico próximamente.</p>
+        <span class="badge badge-gray" style="margin-top:10px;display:inline-block">Pronto</span>
+      </div></div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+lucide.createIcons();
+
+// ═══════════════════════════
+// NAVEGACIÓN
+// ═══════════════════════════
+const PAGE_TITLES = {
+  dashboard:  'Dashboard',
+  alumnos:    'Alumnos',
+  profesores: 'Profesores',
+  rutinas:    'Rutinas',
+  asistencia: 'Asistencia',
+  progreso:   'Progreso',
+  reportes:   'Reportes',
+  config:     'Configuración',
+};
+
+function navigateTo(key) {
+  if (!PAGE_TITLES[key]) return;
+  document.querySelectorAll('.nav-item').forEach(el =>
+    el.classList.toggle('active', el.dataset.section === key)
+  );
+  document.querySelectorAll('.section-page').forEach(el =>
+    el.classList.toggle('active', el.id === 'sec-' + key)
+  );
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[key];
+  window.scrollTo({ top: 0 });
+  closeMobile();
+}
+
+document.querySelectorAll('[data-section]').forEach(el =>
+  el.addEventListener('click', () => navigateTo(el.dataset.section))
+);
+
+// ═══════════════════════════
+// MOBILE SIDEBAR
+// ═══════════════════════════
+const sidebar   = document.getElementById('sidebar');
+const overlay   = document.getElementById('overlay');
+const hamburger = document.getElementById('hamburger');
+
+function openMobile()  { sidebar.classList.add('open'); overlay.classList.add('show'); document.body.style.overflow = 'hidden'; }
+function closeMobile() { sidebar.classList.remove('open'); overlay.classList.remove('show'); document.body.style.overflow = ''; }
+
+hamburger.addEventListener('click', openMobile);
+overlay.addEventListener('click', closeMobile);
+
+// ═══════════════════════════
+// BÚSQUEDA ALUMNOS
+// ═══════════════════════════
+const searchInput = document.getElementById('alumno-search');
+const tbody       = document.getElementById('alumno-tbody');
+const noResults   = document.getElementById('no-results');
+let activeFilter  = 'todos';
+
+function filterTable() {
+  const q = searchInput.value.toLowerCase().trim();
+  const rows = tbody.querySelectorAll('tr');
+  let visible = 0;
+
+  rows.forEach(row => {
+    const text   = row.textContent.toLowerCase();
+    const status = row.dataset.status || '';
+    const matchQ = !q || text.includes(q);
+    const matchF = activeFilter === 'todos' || status === activeFilter;
+    const show   = matchQ && matchF;
+    row.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  noResults.style.display = visible === 0 ? 'block' : 'none';
+}
+
+searchInput.addEventListener('input', filterTable);
+
+document.querySelectorAll('.filter-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    filterTable();
+  });
+});
+</script>
+
+</body>
+</html>
