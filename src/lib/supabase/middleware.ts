@@ -40,15 +40,22 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && isAuthPage) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single()
+    let role = user.user_metadata?.role as string | undefined
+
+    if (!role) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single()
+      role = profile?.role
+    }
+
+    role = role || 'alumno'
 
     const url = request.nextUrl.clone()
-    if (profile?.role === 'admin') url.pathname = '/admin'
-    else if (profile?.role === 'profesor') url.pathname = '/profesor'
+    if (role === 'admin') url.pathname = '/admin'
+    else if (role === 'profesor') url.pathname = '/profesor'
     else url.pathname = '/alumno'
 
     return NextResponse.redirect(url)

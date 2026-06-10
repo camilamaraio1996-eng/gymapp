@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
-import { Users, ClipboardList, ArrowRight, Calendar } from 'lucide-react'
+import { Users, Dumbbell, ArrowRight, Clock, Plus } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { format } from 'date-fns'
+import { format, formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export default async function ProfesorDashboard() {
@@ -16,122 +16,175 @@ export default async function ProfesorDashboard() {
     .eq('user_id', user!.id)
     .single()
 
-  const [{ data: misAlumnos }, { data: rutinas }, { data: ultimasRutinas }] = await Promise.all([
-    supabase.from('alumnos').select('id, nombre, apellido, objetivo').eq('profesor_id', profesor?.id ?? ''),
-    supabase.from('rutinas').select('id', { count: 'exact', head: true }).eq('created_by', user!.id),
-    supabase.from('rutinas').select('id, nombre, objetivo, dias_por_semana, updated_at')
-      .eq('created_by', user!.id).order('updated_at', { ascending: false }).limit(5),
+  const [{ data: misAlumnos }, { count: totalRutinas }, { data: ultimasRutinas }] = await Promise.all([
+    supabase
+      .from('alumnos')
+      .select('id, nombre, apellido, objetivo, created_at')
+      .eq('profesor_id', profesor?.id ?? '')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('rutinas')
+      .select('*', { count: 'exact', head: true })
+      .eq('created_by', user!.id),
+    supabase
+      .from('rutinas')
+      .select('id, nombre, objetivo, dias_por_semana, updated_at, created_at')
+      .eq('created_by', user!.id)
+      .order('updated_at', { ascending: false })
+      .limit(5),
   ])
+
+  const alumnosCount = misAlumnos?.length ?? 0
+  const rutinasCount = totalRutinas ?? 0
+
+  const hora = new Date().getHours()
+  const saludo = hora < 12 ? 'Buenos días' : hora < 19 ? 'Buenas tardes' : 'Buenas noches'
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
-      {/* Welcome hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--primary)] to-[#b5f23a] p-5">
-        <div className="relative z-10">
-          <p className="text-black/70 text-sm font-medium">Panel de Control</p>
-          <h1 className="text-black text-2xl font-bold mt-0.5">
-            Hola, {profesor?.nombre ?? 'Profe'} 👋
-          </h1>
-          <p className="text-black/60 text-sm mt-1">
-            {format(new Date(), "EEEE d 'de' MMMM", { locale: es })}
-          </p>
-        </div>
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-10">
-          <ClipboardList className="w-24 h-24 text-black" />
-        </div>
+
+      {/* Header */}
+      <div>
+        <p className="text-sm text-[var(--text-muted)]">{saludo}</p>
+        <h1 className="text-2xl font-bold tracking-tight mt-0.5">
+          {profesor?.nombre ?? 'Profesor'} {profesor?.apellido ?? ''}
+        </h1>
+        <p className="text-sm text-[var(--text-muted)] mt-0.5">
+          {format(new Date(), "EEEE d 'de' MMMM", { locale: es })}
+        </p>
       </div>
 
-      {/* Stats */}
+      {/* KPIs */}
       <div className="grid grid-cols-2 gap-3">
         <Link href="/profesor/alumnos">
-          <Card className="glass hover:border-[var(--primary)]/50 transition-all cursor-pointer h-full">
-            <CardContent className="p-5">
-              <div className="w-12 h-12 rounded-xl bg-blue-400/10 flex items-center justify-center mb-4">
-                <Users className="w-6 h-6 text-blue-400" />
-              </div>
-              <p className="text-3xl font-bold">{misAlumnos?.length ?? 0}</p>
-              <p className="text-sm text-[var(--muted-foreground)] mt-1">Mis alumnos</p>
-            </CardContent>
-          </Card>
+          <div className="group bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 hover:border-[var(--primary)]/40 hover:bg-[var(--bg-elevated)] transition-all duration-150 cursor-pointer h-full">
+            <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center mb-3">
+              <Users className="w-4 h-4 text-blue-400" />
+            </div>
+            <p className="text-2xl font-bold num">{alumnosCount}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Mis alumnos</p>
+          </div>
         </Link>
         <Link href="/profesor/rutinas">
-          <Card className="glass hover:border-[var(--primary)]/50 transition-all cursor-pointer h-full">
-            <CardContent className="p-5">
-              <div className="w-12 h-12 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center mb-4">
-                <ClipboardList className="w-6 h-6 text-[var(--primary)]" />
-              </div>
-              <p className="text-3xl font-bold">{(rutinas as unknown as { count: number })?.count ?? 0}</p>
-              <p className="text-sm text-[var(--muted-foreground)] mt-1">Mis rutinas</p>
-            </CardContent>
-          </Card>
+          <div className="group bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 hover:border-[var(--primary)]/40 hover:bg-[var(--bg-elevated)] transition-all duration-150 cursor-pointer h-full">
+            <div className="w-9 h-9 rounded-lg bg-[var(--primary)]/10 flex items-center justify-center mb-3">
+              <Dumbbell className="w-4 h-4 text-[var(--primary)]" />
+            </div>
+            <p className="text-2xl font-bold num">{rutinasCount}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Rutinas creadas</p>
+          </div>
         </Link>
       </div>
 
-      {/* My students */}
-      {misAlumnos?.length ? (
+      <div className="grid lg:grid-cols-2 gap-4">
+
+        {/* Students list */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle>Mis alumnos</CardTitle>
+              <CardTitle className="text-base">Mis alumnos</CardTitle>
               <Link href="/profesor/alumnos" className="text-xs text-[var(--primary)] flex items-center gap-1 hover:underline">
                 Ver todos <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-1">
-              {misAlumnos.slice(0, 5).map((alumno) => (
-                <div key={alumno.id} className="flex items-center justify-between p-3 -mx-3 rounded-xl hover:bg-[var(--accent)] transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[var(--primary)]/10 flex items-center justify-center text-sm font-bold text-[var(--primary)]">
+            {!misAlumnos?.length ? (
+              <div className="py-6 text-center flex flex-col items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-[var(--bg-elevated)] flex items-center justify-center">
+                  <Users className="w-5 h-5 text-[var(--text-muted)]" />
+                </div>
+                <p className="text-sm text-[var(--text-muted)]">Todavía no tenés alumnos asignados.</p>
+              </div>
+            ) : (
+              <div className="flex flex-col divide-y divide-[var(--border-subtle)]">
+                {misAlumnos.slice(0, 6).map((alumno) => (
+                  <div key={alumno.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <div className="w-8 h-8 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center text-xs font-bold text-[var(--primary)] shrink-0">
                       {alumno.nombre[0]}{alumno.apellido[0]}
                     </div>
-                    <p className="text-sm font-medium">{alumno.nombre} {alumno.apellido}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{alumno.nombre} {alumno.apellido}</p>
+                      {alumno.objetivo && (
+                        <p className="text-xs text-[var(--text-muted)] truncate">{alumno.objetivo}</p>
+                      )}
+                    </div>
                   </div>
-                  {alumno.objetivo && <Badge variant="secondary" className="text-[10px]">{alumno.objetivo}</Badge>}
-                </div>
-              ))}
-            </div>
+                ))}
+                {misAlumnos.length > 6 && (
+                  <p className="text-xs text-[var(--text-muted)] pt-2.5">
+                    +{misAlumnos.length - 6} más
+                  </p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-6 text-center">
-            <Users className="w-10 h-10 text-[var(--muted-foreground)] mx-auto mb-2" />
-            <p className="text-sm text-[var(--muted-foreground)]">Todavía no tenés alumnos asignados.</p>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Recent routines */}
-      {ultimasRutinas?.length ? (
+        {/* Routines */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle>Últimas modificaciones</CardTitle>
+              <CardTitle className="text-base">Rutinas recientes</CardTitle>
               <Link href="/profesor/rutinas" className="text-xs text-[var(--primary)] flex items-center gap-1 hover:underline">
                 Ver todas <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-1">
-              {ultimasRutinas.map((rutina) => (
-                <div key={rutina.id} className="flex items-center justify-between p-3 -mx-3 rounded-xl hover:bg-[var(--accent)] transition-colors">
-                  <div>
-                    <p className="text-sm font-medium">{rutina.nombre}</p>
-                    {rutina.objetivo && <p className="text-xs text-[var(--muted-foreground)]">{rutina.objetivo}</p>}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)]">
-                    <Calendar className="w-3 h-3" />
-                    {format(new Date(rutina.updated_at), 'd MMM', { locale: es })}
-                  </div>
+            {!ultimasRutinas?.length ? (
+              <div className="py-6 text-center flex flex-col items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[var(--bg-elevated)] flex items-center justify-center">
+                  <Dumbbell className="w-5 h-5 text-[var(--text-muted)]" />
                 </div>
-              ))}
-            </div>
+                <p className="text-sm text-[var(--text-muted)]">No creaste rutinas aún.</p>
+                <Link href="/profesor/rutinas?new=true">
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <Plus className="w-3.5 h-3.5" />
+                    Crear primera rutina
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="flex flex-col divide-y divide-[var(--border-subtle)]">
+                {ultimasRutinas.map((rutina) => (
+                  <div key={rutina.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--primary)]/10 flex items-center justify-center shrink-0">
+                      <Dumbbell className="w-3.5 h-3.5 text-[var(--primary)]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{rutina.nombre}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{rutina.dias_por_semana}x semana</p>
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] text-[var(--text-disabled)] shrink-0">
+                      <Clock className="w-3 h-3" />
+                      {formatDistanceToNow(new Date(rutina.updated_at), { locale: es, addSuffix: true })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
-      ) : null}
+
+      </div>
+
+      {/* Quick actions */}
+      <div className="grid grid-cols-2 gap-3">
+        {[
+          { label: 'Nueva rutina',      href: '/profesor/rutinas?new=true', icon: Dumbbell },
+          { label: 'Ver mis alumnos',   href: '/profesor/alumnos',          icon: Users },
+        ].map(({ label, href, icon: Icon }) => (
+          <Link key={label} href={href} className="group">
+            <div className="flex items-center gap-2.5 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--primary)]/50 hover:bg-[var(--primary)]/5 transition-all duration-150">
+              <Icon className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--primary)] transition-colors" />
+              <span className="text-sm font-medium flex-1">{label}</span>
+              <ArrowRight className="w-3.5 h-3.5 text-[var(--border)] group-hover:text-[var(--primary)] transition-colors" />
+            </div>
+          </Link>
+        ))}
+      </div>
+
     </div>
   )
 }

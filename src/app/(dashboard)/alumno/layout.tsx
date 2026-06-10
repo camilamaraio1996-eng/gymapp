@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { Navbar } from '@/components/layout/navbar'
+import { SidebarLayout } from '@/components/layout/sidebar'
 
 export default async function AlumnoLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -18,7 +18,7 @@ export default async function AlumnoLayout({ children }: { children: React.React
       .select('*')
       .eq('user_id', user.id)
       .single()
-    
+
     if (profile) {
       role = profile.role
       nombre = profile.nombre
@@ -26,19 +26,15 @@ export default async function AlumnoLayout({ children }: { children: React.React
     }
   }
 
-  // fallback a alumno si no hay rol
   role = role || 'alumno'
 
   if (role !== 'alumno') redirect('/login')
 
   return (
-    <div className="min-h-dvh bg-[var(--background)]">
-      <Navbar role="alumno" userName={`${nombre} ${apellido}`.trim() || 'Alumno'} />
-      <main className="md:pt-16 pb-24 md:pb-8">
-        <div className="max-w-2xl mx-auto px-4 md:px-6 py-6">
-          {children}
-        </div>
-      </main>
-    </div>
+    <SidebarLayout role="alumno" userName={`${nombre} ${apellido}`.trim() || 'Alumno'}>
+      <div className="max-w-2xl mx-auto px-4 md:px-6 py-6">
+        {children}
+      </div>
+    </SidebarLayout>
   )
 }

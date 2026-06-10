@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { Navbar } from '@/components/layout/navbar'
+import { SidebarLayout } from '@/components/layout/sidebar'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -18,7 +18,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       .select('*')
       .eq('user_id', user.id)
       .single()
-    
+
     if (profile) {
       role = profile.role
       nombre = profile.nombre
@@ -29,13 +29,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (role !== 'admin') redirect('/login')
 
   return (
-    <div className="min-h-dvh bg-[var(--background)]">
-      <Navbar role="admin" userName={`${nombre} ${apellido}`.trim() || 'Admin'} />
-      <main className="md:pt-16 pb-24 md:pb-8">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
-          {children}
-        </div>
-      </main>
-    </div>
+    <SidebarLayout role="admin" userName={`${nombre} ${apellido}`.trim() || 'Admin'}>
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+        {children}
+      </div>
+    </SidebarLayout>
   )
 }

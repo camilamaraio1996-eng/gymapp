@@ -10,10 +10,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    allowedRevalidateHeaderKeys: [],
-  },
-  serverExternalPackages: [],
 }
 
 // @ts-ignore
