@@ -1,14 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import {
-  Users, UserCheck, UserX, Dumbbell, Calendar, ArrowRight,
-  ArrowUpRight, ArrowDownRight, AlertTriangle, Plus,
-  ClipboardList,
-} from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Users, UserCheck, Dumbbell, AlertTriangle, UserPlus, PlusCircle, BarChart2, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
-import { format, formatDistanceToNow } from 'date-fns'
+import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export default async function AdminDashboard() {
@@ -20,249 +13,263 @@ export default async function AdminDashboard() {
     { count: rutinasActivas },
     { count: sinRutina },
     { data: ultimos },
-    { data: ultimasRutinas },
   ] = await Promise.all([
     supabase.from('alumnos').select('*', { count: 'exact', head: true }),
     supabase.from('profesores').select('*', { count: 'exact', head: true }),
     supabase.from('asignaciones').select('*', { count: 'exact', head: true }).eq('activa', true),
-    // alumnos with no active assignment
     supabase.from('alumnos').select('id', { count: 'exact', head: true })
       .not('id', 'in', `(select alumno_id from asignaciones where activa = true)`),
-    supabase
-      .from('alumnos')
-      .select('id, nombre, apellido, email, fecha_ingreso, objetivo, created_at')
+    supabase.from('alumnos')
+      .select('id, nombre, apellido, email, created_at')
       .order('created_at', { ascending: false })
-      .limit(8),
-    supabase
-      .from('rutinas')
-      .select('id, nombre, objetivo, dias_por_semana, updated_at, created_at')
-      .order('created_at', { ascending: false })
-      .limit(3),
+      .limit(6),
   ])
 
-  const alumnos = totalAlumnos ?? 0
-  const activos = rutinasActivas ?? 0
-  const sinRutinaCount = Math.max(0, (sinRutina ?? 0))
-  const inactivos = Math.max(0, alumnos - activos)
+  const totalA     = totalAlumnos    ?? 0
+  const totalP     = totalProfesores ?? 0
+  const activos    = rutinasActivas  ?? 0
+  const sinRutinaC = sinRutina       ?? 0
+
+  const today = format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })
 
   const kpis = [
     {
-      label: 'Total alumnos',
-      value: alumnos,
-      icon: Users,
-      iconBg: 'bg-blue-500/10',
-      iconColor: 'text-blue-400',
-      href: '/admin/alumnos',
-      trend: null,
+      label: 'Alumnos activos', value: totalA, href: '/admin/alumnos',
+      Icon: Users, iconColor: '#4ade80', iconBg: 'rgba(74,222,128,0.12)',
+      sub: totalA > 0 ? `${totalA} inscriptos` : 'Sin registros',
+      subColor: totalA > 0 ? '#4ade80' : ('var(--t3)' as string),
     },
     {
-      label: 'Rutinas activas',
-      value: activos,
-      icon: Dumbbell,
-      iconBg: 'bg-[var(--primary)]/10',
-      iconColor: 'text-[var(--primary)]',
-      href: '/admin/rutinas',
-      trend: activos > 0 ? { dir: 'up', pct: Math.round((activos / Math.max(1, alumnos)) * 100) + '%' } : null,
-      trendLabel: 'del total',
+      label: 'Profesores', value: totalP, href: '/admin/profesores',
+      Icon: UserCheck, iconColor: '#60a5fa', iconBg: 'rgba(96,165,250,0.12)',
+      sub: `${totalP} activo${totalP !== 1 ? 's' : ''} este mes`,
+      subColor: 'var(--t3)' as string,
     },
     {
-      label: 'Profesores',
-      value: totalProfesores ?? 0,
-      icon: UserCheck,
-      iconBg: 'bg-purple-500/10',
-      iconColor: 'text-purple-400',
-      href: '/admin/profesores',
-      trend: null,
+      label: 'Rutinas activas', value: activos, href: '/admin/rutinas',
+      Icon: Dumbbell, iconColor: '#fb923c', iconBg: 'rgba(251,146,60,0.12)',
+      sub: `${activos} en curso`,
+      subColor: 'var(--t3)' as string,
     },
     {
-      label: 'Sin rutina',
-      value: sinRutinaCount,
-      icon: UserX,
-      iconBg: sinRutinaCount > 0 ? 'bg-[var(--warning)]/10' : 'bg-[var(--success)]/10',
-      iconColor: sinRutinaCount > 0 ? 'text-[var(--warning)]' : 'text-[var(--success)]',
-      href: '/admin/alumnos',
-      trend: null,
-      alert: sinRutinaCount > 0,
+      label: 'Sin rutina', value: sinRutinaC, href: '/admin/alumnos',
+      Icon: AlertTriangle, iconColor: '#f87171', iconBg: 'rgba(248,113,113,0.12)',
+      sub: sinRutinaC > 0 ? 'Acción requerida' : 'Todo asignado ✓',
+      subColor: sinRutinaC > 0 ? '#f87171' : '#4ade80',
     },
   ]
 
-  return (
-    <div className="flex flex-col gap-6 animate-fade-in">
+  const quickActions = [
+    { label: 'Nuevo alumno',   sub: 'Registrar en el sistema',     href: '/admin/alumnos',    Icon: UserPlus,   iconColor: '#4ade80', iconBg: 'rgba(74,222,128,0.12)'  },
+    { label: 'Crear rutina',   sub: 'Armar plan de entrenamiento', href: '/admin/rutinas',    Icon: PlusCircle, iconColor: '#60a5fa', iconBg: 'rgba(96,165,250,0.12)'  },
+    { label: 'Ver profesores', sub: `${totalP} activos este mes`,  href: '/admin/profesores', Icon: UserCheck,  iconColor: '#fb923c', iconBg: 'rgba(251,146,60,0.12)'  },
+    { label: 'Ver reportes',   sub: 'Estadísticas del mes',        href: '/admin/reportes',   Icon: BarChart2,  iconColor: '#a78bfa', iconBg: 'rgba(167,139,250,0.12)' },
+  ]
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-[var(--text-muted)] text-sm mt-0.5">
-            {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
-          </p>
+  const dotColors = ['#AAFF00', '#60a5fa', '#fb923c', '#f87171', '#a78bfa']
+
+  const card: React.CSSProperties = {
+    background: 'var(--surface)',
+    border: '1px solid var(--border)',
+    borderRadius: 14,
+    overflow: 'hidden',
+  }
+  const cardHeader: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: '16px 20px',
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
+  }
+
+  return (
+    <div className="animate-fade-in">
+
+      {/* Page header */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
+          Dashboard
         </div>
-        <Link href="/admin/alumnos?new=true">
-          <Button size="sm" className="gap-1.5">
-            <Plus className="w-3.5 h-3.5" />
-            Nuevo alumno
-          </Button>
-        </Link>
+        <div style={{ fontSize: 13.5, color: 'var(--t2)', marginTop: 5 }}>{today}</div>
       </div>
 
+      {/* Alert banner */}
+      {sinRutinaC > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.2)',
+          borderRadius: 10, padding: '11px 16px', marginBottom: 20, fontSize: 13,
+        }}>
+          <AlertTriangle style={{ width: 15, height: 15, color: '#f87171', flexShrink: 0 } as React.CSSProperties} />
+          <span style={{ color: 'var(--t2)' }}>
+            <b style={{ color: '#f87171' }}>{sinRutinaC} alumno{sinRutinaC !== 1 ? 's' : ''}</b> sin rutina asignada.{' '}
+            <Link href="/admin/alumnos" style={{ color: '#f87171', fontWeight: 600, textDecoration: 'underline' }}>Ver →</Link>
+          </span>
+        </div>
+      )}
+
       {/* KPI grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 stagger">
-        {kpis.map(({ label, value, icon: Icon, iconBg, iconColor, href, trend, trendLabel, alert }) => (
-          <Link key={label} href={href}>
-            <div className="group relative bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 hover:border-[var(--primary)]/40 hover:bg-[var(--bg-elevated)] transition-all duration-200 cursor-pointer animate-fade-in">
-              <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center mb-3`}>
-                <Icon className={`w-4 h-4 ${iconColor}`} />
+      <div className="stagger" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 20 }}>
+        {kpis.map(({ label, value, Icon, iconBg, iconColor, sub, subColor, href }) => (
+          <Link key={label} href={href} style={{ textDecoration: 'none' }}>
+            <div className="card-hover" style={{ ...card, padding: '20px', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  {label}
+                </div>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon style={{ width: 16, height: 16, color: iconColor } as React.CSSProperties} />
+                </div>
               </div>
-              <p className="text-2xl font-bold num">{value}</p>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">{label}</p>
-              {trend && (
-                <div className="flex items-center gap-1 mt-2">
-                  <ArrowUpRight className="w-3 h-3 text-[var(--success)]" />
-                  <span className="text-xs text-[var(--success)] font-medium">{trend.pct}</span>
-                  {trendLabel && <span className="text-xs text-[var(--text-muted)]">{trendLabel}</span>}
-                </div>
-              )}
-              {alert && value > 0 && (
-                <div className="flex items-center gap-1 mt-2">
-                  <AlertTriangle className="w-3 h-3 text-[var(--warning)]" />
-                  <span className="text-xs text-[var(--warning)]">Requieren atención</span>
-                </div>
-              )}
-              <ArrowRight className="absolute top-4 right-4 w-3.5 h-3.5 text-[var(--border)] group-hover:text-[var(--text-muted)] transition-colors" />
+              <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--t1)', lineHeight: 1, letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums' }}>
+                {value}
+              </div>
+              <div style={{ fontSize: 11.5, color: subColor, marginTop: 7, fontWeight: 500 }}>{sub}</div>
             </div>
           </Link>
         ))}
       </div>
 
-      {/* Alerts section */}
-      {sinRutinaCount > 0 && (
-        <div className="rounded-lg border border-[var(--warning)]/30 bg-[var(--warning)]/5 p-4">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-4 h-4 text-[var(--warning)] mt-0.5 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[var(--text)]">
-                {sinRutinaCount} alumno{sinRutinaCount > 1 ? 's' : ''} sin rutina asignada
-              </p>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                Asigná una rutina para que puedan comenzar a entrenar.
-              </p>
+      {/* Main 2-col grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 14, alignItems: 'start' }}>
+
+        {/* Registros recientes */}
+        <div style={card}>
+          <div style={cardHeader}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(74,222,128,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Users style={{ width: 14, height: 14, color: '#4ade80' } as React.CSSProperties} />
+              </div>
+              <span style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--t1)' }}>Registros recientes</span>
             </div>
-            <Link href="/admin/alumnos">
-              <Button variant="outline" size="sm" className="text-xs shrink-0">
-                Ver alumnos
-              </Button>
+            <Link href="/admin/alumnos" className="link-hover" style={{ fontSize: 12.5, color: 'var(--t3)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
+              Ver todos <ChevronRight style={{ width: 12, height: 12 } as React.CSSProperties} />
             </Link>
           </div>
-        </div>
-      )}
 
-      <div className="grid lg:grid-cols-3 gap-4">
-
-        {/* Recent registrations */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Últimos registros</CardTitle>
-              <Link
-                href="/admin/alumnos"
-                className="text-xs text-[var(--primary)] flex items-center gap-1 hover:underline"
-              >
-                Ver todos <ArrowRight className="w-3 h-3" />
-              </Link>
+          {!ultimos?.length ? (
+            <div style={{ textAlign: 'center', padding: '48px 20px' }}>
+              <Users style={{ width: 36, height: 36, color: 'var(--t3)', margin: '0 auto 12px', display: 'block' } as React.CSSProperties} />
+              <div style={{ fontSize: 14, color: 'var(--t2)', fontWeight: 500 }}>Sin alumnos registrados</div>
+              <div style={{ fontSize: 12.5, color: 'var(--t3)', marginTop: 4 }}>Los nuevos registros aparecerán acá.</div>
             </div>
-          </CardHeader>
-          <CardContent>
-            {!ultimos?.length ? (
-              <div className="py-8 text-center">
-                <Users className="w-8 h-8 text-[var(--text-muted)] mx-auto mb-2 opacity-40" />
-                <p className="text-sm text-[var(--text-muted)]">No hay alumnos registrados aún.</p>
-              </div>
-            ) : (
-              <div className="flex flex-col divide-y divide-[var(--border-subtle)]">
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: 'rgba(255,255,255,0.016)' }}>
+                  {['Alumno', 'Estado', 'Ingreso', ''].map((h, i) => (
+                    <th key={i} style={{
+                      textAlign: 'left', fontSize: 10.5, fontWeight: 600, color: 'var(--t3)',
+                      textTransform: 'uppercase', letterSpacing: '0.08em',
+                      padding: '10px 20px', whiteSpace: 'nowrap',
+                    }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
                 {ultimos.map((alumno) => (
-                  <div key={alumno.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
-                    <div className="w-8 h-8 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center text-xs font-bold text-[var(--primary)] shrink-0">
-                      {alumno.nombre[0]}{alumno.apellido[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{alumno.nombre} {alumno.apellido}</p>
-                      <p className="text-xs text-[var(--text-muted)] truncate">{alumno.email}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      {alumno.objetivo && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                          {alumno.objetivo}
-                        </Badge>
-                      )}
-                      <span className="text-[11px] text-[var(--text-muted)]">
-                        {formatDistanceToNow(new Date(alumno.created_at), { locale: es, addSuffix: true })}
+                  <tr key={alumno.id} className="row-hover" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <td style={{ padding: '12px 20px', verticalAlign: 'middle' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{
+                          width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
+                          background: 'rgba(170,255,0,0.08)', border: '1px solid rgba(170,255,0,0.15)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 10.5, fontWeight: 700, color: 'var(--primary)',
+                        }}>
+                          {alumno.nombre[0]}{alumno.apellido[0]}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 500, color: 'var(--t1)', fontSize: 13.5 }}>{alumno.nombre} {alumno.apellido}</div>
+                          <div style={{ fontSize: 11.5, color: 'var(--t3)', marginTop: 1 }}>{alumno.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '12px 20px', verticalAlign: 'middle' }}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center',
+                        fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 999,
+                        background: 'rgba(170,255,0,0.1)', color: 'var(--primary)',
+                      }}>
+                        Activo
                       </span>
+                    </td>
+                    <td style={{ padding: '12px 20px', verticalAlign: 'middle', color: 'var(--t2)', fontSize: 12.5 }}>
+                      {format(new Date(alumno.created_at), 'dd MMM yyyy', { locale: es })}
+                    </td>
+                    <td style={{ padding: '12px 20px', verticalAlign: 'middle' }}>
+                      <Link href="/admin/alumnos" className="ghost-btn">Ver</Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Right column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+          {/* Quick actions */}
+          <div style={card}>
+            <div style={cardHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(96,165,250,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Dumbbell style={{ width: 14, height: 14, color: '#60a5fa' } as React.CSSProperties} />
+                </div>
+                <span style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--t1)' }}>Acciones rápidas</span>
+              </div>
+            </div>
+            {quickActions.map(({ label, sub, href, Icon, iconColor, iconBg }) => (
+              <Link key={label} href={href} className="action-row" style={{ textDecoration: 'none' }}>
+                <div style={{ width: 32, height: 32, borderRadius: 9, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon style={{ width: 14, height: 14, color: iconColor } as React.CSSProperties} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, color: 'var(--t1)', fontWeight: 500 }}>{label}</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--t3)', marginTop: 1 }}>{sub}</div>
+                </div>
+                <ChevronRight style={{ width: 12, height: 12, color: 'var(--t3)', flexShrink: 0 } as React.CSSProperties} />
+              </Link>
+            ))}
+          </div>
+
+          {/* Activity */}
+          <div style={card}>
+            <div style={cardHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(251,146,60,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <BarChart2 style={{ width: 14, height: 14, color: '#fb923c' } as React.CSSProperties} />
+                </div>
+                <span style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--t1)' }}>Actividad reciente</span>
+              </div>
+            </div>
+            {!ultimos?.length ? (
+              <div style={{ padding: '24px 20px', color: 'var(--t3)', fontSize: 12.5, textAlign: 'center' }}>Sin actividad registrada.</div>
+            ) : (
+              <div style={{ padding: '4px 0 8px' }}>
+                {ultimos.slice(0, 5).map((alumno, i) => (
+                  <div key={alumno.id} style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 12,
+                    padding: '9px 20px',
+                    borderTop: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.04)',
+                  }}>
+                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: dotColors[i % dotColors.length], marginTop: 5, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: 12.5, color: 'var(--t2)', lineHeight: 1.4 }}>
+                        <b style={{ color: 'var(--t1)', fontWeight: 500 }}>{alumno.nombre} {alumno.apellido}</b> se registró
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>
+                        {format(new Date(alumno.created_at), 'dd MMM, HH:mm', { locale: es })}
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Right column */}
-        <div className="flex flex-col gap-4">
-
-          {/* Recent routines */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Rutinas recientes</CardTitle>
-                <Link href="/admin/rutinas" className="text-xs text-[var(--primary)] flex items-center gap-1 hover:underline">
-                  Ver todas <ArrowRight className="w-3 h-3" />
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {!ultimasRutinas?.length ? (
-                <p className="text-sm text-[var(--text-muted)] text-center py-4">Sin rutinas creadas.</p>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {ultimasRutinas.map((r) => (
-                    <div key={r.id} className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-md bg-[var(--primary)]/10 flex items-center justify-center shrink-0">
-                        <Dumbbell className="w-3.5 h-3.5 text-[var(--primary)]" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{r.nombre}</p>
-                        <p className="text-xs text-[var(--text-muted)]">{r.dias_por_semana}x semana</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Quick actions */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Acciones rápidas</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              {[
-                { label: 'Nuevo alumno',   href: '/admin/alumnos?new=true',    icon: Users },
-                { label: 'Nuevo profesor', href: '/admin/profesores?new=true', icon: UserCheck },
-                { label: 'Nueva rutina',   href: '/admin/rutinas?new=true',    icon: ClipboardList },
-              ].map(({ label, href, icon: Icon }) => (
-                <Link key={label} href={href} className="group">
-                  <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--primary)]/50 hover:bg-[var(--primary)]/5 transition-all duration-150 cursor-pointer">
-                    <Icon className="w-3.5 h-3.5 text-[var(--text-muted)] group-hover:text-[var(--primary)] transition-colors" />
-                    <span className="text-sm font-medium">{label}</span>
-                    <ArrowRight className="w-3 h-3 text-[var(--border)] group-hover:text-[var(--primary)] ml-auto transition-colors" />
-                  </div>
-                </Link>
-              ))}
-            </CardContent>
-          </Card>
+          </div>
 
         </div>
       </div>
+
     </div>
   )
 }

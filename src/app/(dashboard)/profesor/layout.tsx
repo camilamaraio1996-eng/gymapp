@@ -30,7 +30,7 @@ export default async function ProfesorLayout({ children }: { children: React.Rea
 
   return (
     <SidebarLayout role="profesor" userName={`${nombre} ${apellido}`.trim() || 'Profesor'}>
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <div style={{ padding: '28px 32px 48px', maxWidth: 1100 }}>
         {children}
       </div>
     </SidebarLayout>

@@ -2,61 +2,100 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { cn } from '@/lib/utils'
-import { createClient } from '@/lib/supabase/client'
-import { toast } from 'sonner'
+import { usePathname } from 'next/navigation'
 import type { UserRole } from '@/lib/supabase/types'
 import {
-  LayoutDashboard, Users, UserCheck, Dumbbell, ClipboardList,
-  Calendar, TrendingUp, MessageSquare, BarChart2,
-  Home, Zap, History, BookOpen, Menu, X, LogOut,
-  Settings,
+  LayoutDashboard, Users, UserCheck, ClipboardList,
+  Calendar, TrendingUp, BarChart2,
+  Home, Zap, History, MessageSquare, BookOpen,
+  LogOut, Settings, Dumbbell, Bell, Search,
+  ChevronRight,
 } from 'lucide-react'
 
 interface NavItem {
   href: string
   label: string
-  icon: React.ComponentType<{ className?: string }>
-  soon?: boolean
+  icon: React.ComponentType<{ style?: React.CSSProperties; className?: string }>
+  pill?: string
 }
+interface NavGroup { label?: string; items: NavItem[] }
 
-const adminNav: NavItem[] = [
-  { href: '/admin',             label: 'Dashboard',      icon: LayoutDashboard },
-  { href: '/admin/alumnos',     label: 'Alumnos',        icon: Users },
-  { href: '/admin/profesores',  label: 'Profesores',     icon: UserCheck },
-  { href: '/admin/rutinas',     label: 'Rutinas',        icon: Dumbbell },
-  { href: '/admin/ejercicios',  label: 'Ejercicios',     icon: BookOpen,       soon: true },
-  { href: '/admin/asistencia',  label: 'Asistencia',     icon: Calendar,       soon: true },
-  { href: '/admin/progreso',    label: 'Progreso físico',icon: TrendingUp,     soon: true },
-  { href: '/admin/mensajes',    label: 'Mensajes',       icon: MessageSquare,  soon: true },
-  { href: '/admin/reportes',    label: 'Reportes',       icon: BarChart2,      soon: true },
-  { href: '/admin/config',      label: 'Configuración',  icon: Settings,       soon: true },
+const adminNavGroups: NavGroup[] = [
+  {
+    label: 'Principal',
+    items: [
+      { href: '/admin',            label: 'Dashboard',     icon: LayoutDashboard },
+      { href: '/admin/alumnos',    label: 'Alumnos',       icon: Users },
+      { href: '/admin/profesores', label: 'Profesores',    icon: UserCheck },
+      { href: '/admin/rutinas',    label: 'Rutinas',       icon: ClipboardList },
+    ],
+  },
+  {
+    label: 'Módulos',
+    items: [
+      { href: '/admin/asistencia', label: 'Asistencia',    icon: Calendar,   pill: 'pronto' },
+      { href: '/admin/progreso',   label: 'Progreso',      icon: TrendingUp, pill: 'pronto' },
+      { href: '/admin/reportes',   label: 'Reportes',      icon: BarChart2,  pill: 'beta'   },
+    ],
+  },
+  {
+    label: 'Sistema',
+    items: [
+      { href: '/admin/config',     label: 'Configuración', icon: Settings,   pill: 'pronto' },
+    ],
+  },
 ]
 
-const profesorNav: NavItem[] = [
-  { href: '/profesor',             label: 'Dashboard',  icon: LayoutDashboard },
-  { href: '/profesor/alumnos',     label: 'Mis alumnos',icon: Users },
-  { href: '/profesor/rutinas',     label: 'Rutinas',    icon: Dumbbell },
-  { href: '/profesor/ejercicios',  label: 'Ejercicios', icon: BookOpen,      soon: true },
-  { href: '/profesor/asistencia',  label: 'Asistencia', icon: Calendar,      soon: true },
-  { href: '/profesor/mensajes',    label: 'Mensajes',   icon: MessageSquare, soon: true },
+const profesorNavGroups: NavGroup[] = [
+  {
+    items: [
+      { href: '/profesor',            label: 'Dashboard',   icon: LayoutDashboard },
+      { href: '/profesor/alumnos',    label: 'Mis alumnos', icon: Users },
+      { href: '/profesor/rutinas',    label: 'Rutinas',     icon: Dumbbell },
+      { href: '/profesor/ejercicios', label: 'Ejercicios',  icon: BookOpen,      pill: 'pronto' },
+      { href: '/profesor/asistencia', label: 'Asistencia',  icon: Calendar,      pill: 'pronto' },
+      { href: '/profesor/mensajes',   label: 'Mensajes',    icon: MessageSquare, pill: 'pronto' },
+    ],
+  },
 ]
 
-const alumnoNav: NavItem[] = [
-  { href: '/alumno',           label: 'Inicio',      icon: Home },
-  { href: '/alumno/rutinas',   label: 'Mi rutina',   icon: ClipboardList },
-  { href: '/alumno/entrenar',  label: 'Entrenar',    icon: Zap,           soon: true },
-  { href: '/alumno/historial', label: 'Historial',   icon: History,       soon: true },
-  { href: '/alumno/progreso',  label: 'Mi progreso', icon: TrendingUp,    soon: true },
-  { href: '/alumno/mensajes',  label: 'Mensajes',    icon: MessageSquare, soon: true },
+const alumnoNavGroups: NavGroup[] = [
+  {
+    items: [
+      { href: '/alumno',           label: 'Inicio',      icon: Home },
+      { href: '/alumno/rutinas',   label: 'Mi rutina',   icon: ClipboardList },
+      { href: '/alumno/entrenar',  label: 'Entrenar',    icon: Zap,           pill: 'pronto' },
+      { href: '/alumno/historial', label: 'Historial',   icon: History,       pill: 'pronto' },
+      { href: '/alumno/progreso',  label: 'Mi progreso', icon: TrendingUp,    pill: 'pronto' },
+      { href: '/alumno/mensajes',  label: 'Mensajes',    icon: MessageSquare, pill: 'pronto' },
+    ],
+  },
 ]
 
 const roleLabel: Record<UserRole, string> = {
-  admin: 'Owner',
+  admin:    'Owner',
   profesor: 'Profesor',
-  alumno: 'Alumno',
+  alumno:   'Atleta',
 }
+
+const adminBottomNav = [
+  { href: '/admin',            label: 'Dashboard',  icon: LayoutDashboard },
+  { href: '/admin/alumnos',    label: 'Alumnos',    icon: Users },
+  { href: '/admin/profesores', label: 'Profesores', icon: UserCheck },
+  { href: '/admin/rutinas',    label: 'Rutinas',    icon: ClipboardList },
+]
+const profesorBottomNav = [
+  { href: '/profesor',         label: 'Dashboard',  icon: LayoutDashboard },
+  { href: '/profesor/alumnos', label: 'Alumnos',    icon: Users },
+  { href: '/profesor/rutinas', label: 'Rutinas',    icon: Dumbbell },
+  { href: '/profesor/mensajes',label: 'Mensajes',   icon: MessageSquare },
+]
+const alumnoBottomNav = [
+  { href: '/alumno',           label: 'Inicio',     icon: Home },
+  { href: '/alumno/rutinas',   label: 'Rutina',     icon: ClipboardList },
+  { href: '/alumno/entrenar',  label: 'Entrenar',   icon: Zap },
+  { href: '/alumno/progreso',  label: 'Progreso',   icon: TrendingUp },
+]
 
 interface SidebarLayoutProps {
   role: UserRole
@@ -65,199 +104,234 @@ interface SidebarLayoutProps {
 }
 
 export function SidebarLayout({ role, userName, children }: SidebarLayoutProps) {
-  const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
-  const router = useRouter()
 
-  const navItems = role === 'admin' ? adminNav : role === 'profesor' ? profesorNav : alumnoNav
+  const navGroups = role === 'admin' ? adminNavGroups
+    : role === 'profesor' ? profesorNavGroups
+    : alumnoNavGroups
 
-  const initials = userName
-    .split(' ')
-    .filter(Boolean)
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) || '?'
+  const bottomNav = role === 'admin' ? adminBottomNav
+    : role === 'profesor' ? profesorBottomNav
+    : alumnoBottomNav
 
-  useEffect(() => {
-    setMobileOpen(false)
-  }, [pathname])
+  const initials = userName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??'
 
-  // Prevent body scroll when drawer open
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => { document.body.style.overflow = '' }
-  }, [mobileOpen])
+  function isActive(item: NavItem) {
+    if (item.pill) return false
+    const roots = ['/admin', '/profesor', '/alumno']
+    if (roots.includes(item.href)) return pathname === item.href
+    return pathname.startsWith(item.href)
+  }
+
+  const allItems = navGroups.flatMap(g => g.items)
+  const activeItem = allItems.find(i => isActive(i))
+  const pageTitle = activeItem?.label ?? 'GymPro'
 
   async function handleLogout() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    toast.success('Sesión cerrada')
-    router.push('/login')
+    await fetch('/api/auth/signout', { method: 'POST' })
+    window.location.replace('/login')
   }
 
-  function isActive(href: string) {
-    const dashboards = ['/admin', '/profesor', '/alumno']
-    if (dashboards.includes(href)) return pathname === href
-    return pathname.startsWith(href)
-  }
-
-  const activeLabel = navItems.find((item) => isActive(item.href) && !item.soon)?.label ?? ''
-
-  function NavLinks() {
+  function SidebarContent() {
     return (
-      <nav className="flex-1 overflow-y-auto px-2 py-3 flex flex-col gap-0.5">
-        {navItems.map(({ href, label, icon: Icon, soon }) => {
-          const active = isActive(href) && !soon
-          return (
-            <Link
-              key={href}
-              href={soon ? '#' : href}
-              onClick={soon ? (e) => e.preventDefault() : undefined}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150',
-                active
-                  ? 'bg-[var(--primary)] text-black'
-                  : soon
-                    ? 'text-[var(--text-disabled)] cursor-default select-none'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-elevated)]'
-              )}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              <span className="flex-1 truncate">{label}</span>
-              {soon && (
-                <span className="text-[9px] px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-disabled)] font-medium leading-none">
-                  pronto
-                </span>
-              )}
-            </Link>
-          )
-        })}
-      </nav>
-    )
-  }
+      <>
+        {/* Logo */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '18px 14px 16px',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          flexShrink: 0,
+        }}>
+          <div style={{
+            width: 30, height: 30, background: 'var(--primary)', borderRadius: 8,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <Dumbbell style={{ width: 15, height: 15, strokeWidth: 2.5, color: '#000' }} />
+          </div>
+          <span className="sidebar-label" style={{ fontSize: 15, fontWeight: 600, color: 'var(--t1)', letterSpacing: '-0.01em' }}>GymPro</span>
+        </div>
 
-  function UserFooter() {
-    return (
-      <div className="px-2 py-3 border-t border-[var(--border)]">
-        <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg group hover:bg-[var(--bg-elevated)] transition-colors cursor-default">
-          <div className="w-7 h-7 rounded-full bg-[var(--primary)]/15 flex items-center justify-center text-[11px] font-bold text-[var(--primary)] shrink-0">
+        {/* Nav */}
+        <nav style={{ flex: 1, padding: '10px 8px', overflowY: 'auto', overflowX: 'hidden' }}>
+          {navGroups.map((group, gi) => (
+            <div key={gi} style={{ marginBottom: 4 }}>
+              {group.label && (
+                <div className="sidebar-group-label" style={{
+                  fontSize: 10, fontWeight: 600, color: 'var(--t3)',
+                  textTransform: 'uppercase', letterSpacing: '0.09em',
+                  padding: '16px 10px 6px',
+                }}>
+                  {group.label}
+                </div>
+              )}
+              {group.items.map(item => {
+                const active = isActive(item)
+                const disabled = !!item.pill
+                return (
+                  <div key={item.href} className="nav-item-wrap">
+                    <Link
+                      href={disabled ? '#' : item.href}
+                      onClick={disabled ? (e) => e.preventDefault() : undefined}
+                      className={`nav-item-base ${active ? 'nav-active-item' : ''} ${disabled ? 'nav-disabled-item' : ''}`}
+                    >
+                      <span style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <item.icon style={{ width: 15, height: 15, strokeWidth: 1.8 }} />
+                      </span>
+                      <span className="sidebar-label" style={{ flex: 1, fontSize: 13.5 }}>{item.label}</span>
+                      {item.pill && (
+                        <span className="sidebar-label" style={{
+                          fontSize: 9, background: 'rgba(255,255,255,0.06)',
+                          color: 'var(--t3)', borderRadius: 999,
+                          padding: '2px 6px', letterSpacing: '0.04em', fontWeight: 500,
+                        }}>
+                          {item.pill}
+                        </span>
+                      )}
+                    </Link>
+                    <span className="nav-tooltip">{item.label}</span>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </nav>
+
+        {/* Footer */}
+        <div style={{
+          borderTop: '1px solid rgba(255,255,255,0.05)',
+          padding: '12px 10px',
+          display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0,
+        }}>
+          <div style={{
+            width: 30, height: 30, borderRadius: '50%',
+            background: 'rgba(170,255,0,0.1)', border: '1px solid rgba(170,255,0,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 11, fontWeight: 600, color: 'var(--primary)', flexShrink: 0,
+            letterSpacing: '0.02em',
+          }}>
             {initials}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-[var(--text)] truncate leading-tight">{userName}</p>
-            <p className="text-xs text-[var(--text-muted)] leading-tight">{roleLabel[role]}</p>
+          <div className="sidebar-user-info" style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12.5, color: 'var(--t1)', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {userName}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--t3)' }}>{roleLabel[role]}</div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-red-400 hover:bg-red-400/10 transition-all opacity-0 group-hover:opacity-100"
-            title="Cerrar sesión"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-          </button>
+          <div className="nav-item-wrap">
+            <button onClick={handleLogout} title="Cerrar sesión" className="logout-btn" style={{ flexShrink: 0 }}>
+              <LogOut style={{ width: 14, height: 14 }} />
+            </button>
+            <span className="nav-tooltip">Cerrar sesión</span>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   return (
-    <div className="min-h-dvh bg-[var(--background)]">
+    <div style={{ minHeight: '100dvh', background: 'var(--background)' }}>
 
-      {/* ── Desktop sidebar ─────────────────────────────────── */}
-      <aside className="hidden md:flex fixed inset-y-0 left-0 w-60 flex-col bg-[var(--bg-card)] border-r border-[var(--border)] z-40">
-        {/* Logo */}
-        <div className="flex items-center gap-2.5 px-4 h-14 border-b border-[var(--border)] shrink-0">
-          <div className="w-7 h-7 bg-[var(--primary)] rounded-lg flex items-center justify-center shrink-0">
-            <Dumbbell className="w-3.5 h-3.5 text-black" />
-          </div>
-          <span className="font-bold text-[15px] tracking-tight">GymPro</span>
-        </div>
-
-        <NavLinks />
-        <UserFooter />
+      {/* Sidebar */}
+      <aside className="sidebar-rail">
+        <SidebarContent />
       </aside>
 
-      {/* ── Mobile overlay ───────────────────────────────────── */}
-      {mobileOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
+      {/* Topbar */}
+      <header className="topbar-bar" style={{ padding: '0 20px', gap: 16 }}>
 
-      {/* ── Mobile sidebar drawer ────────────────────────────── */}
-      <aside
-        className={cn(
-          'md:hidden fixed inset-y-0 left-0 w-72 z-50 flex flex-col bg-[var(--bg-card)] border-r border-[var(--border)] transform transition-transform duration-300 ease-in-out',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        )}
-      >
-        {/* Logo + close */}
-        <div className="flex items-center justify-between px-4 h-14 border-b border-[var(--border)] shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-[var(--primary)] rounded-lg flex items-center justify-center shrink-0">
-              <Dumbbell className="w-3.5 h-3.5 text-black" />
-            </div>
-            <span className="font-bold text-[15px] tracking-tight">GymPro</span>
+        {/* Breadcrumb (desktop) */}
+        <div className="topbar-breadcrumb" style={{ alignItems: 'center', gap: 6, flex: 1 }}>
+          <span style={{ fontSize: 12.5, color: 'var(--t3)', fontWeight: 400 }}>GymPro</span>
+          <ChevronRight style={{ width: 12, height: 12, color: 'var(--t3)' }} />
+          <span style={{ fontSize: 12.5, color: 'var(--t1)', fontWeight: 500 }}>{pageTitle}</span>
+        </div>
+
+        {/* Page title (tablet/mobile) */}
+        <div className="topbar-page-title" style={{ alignItems: 'center', flex: 1 }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{pageTitle}</span>
+        </div>
+
+        {/* Search (desktop) */}
+        <div className="topbar-search-area" style={{ alignItems: 'center' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: 8, padding: '0 12px', width: 260, height: 34,
+          }}>
+            <Search style={{ width: 13, height: 13, color: 'var(--t3)', flexShrink: 0 }} />
+            <span style={{ fontSize: 12.5, color: 'var(--t3)', flex: 1 }}>Buscar…</span>
+            <span style={{ fontSize: 10.5, color: 'var(--t3)', background: 'rgba(255,255,255,0.06)', padding: '2px 5px', borderRadius: 4 }}>⌘K</span>
           </div>
-          <button
-            onClick={() => setMobileOpen(false)}
-            className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-elevated)] transition-colors"
+        </div>
+
+        {/* Right side */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
+          <button style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--t3)', padding: 6, borderRadius: 7,
+            display: 'flex', alignItems: 'center',
+            transition: 'color 0.12s',
+          }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--t1)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--t3)')}
           >
-            <X className="w-4 h-4" />
+            <Bell style={{ width: 16, height: 16 }} />
+          </button>
+
+          <div className="topbar-org-name" style={{ alignItems: 'center', gap: 8 }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: 'var(--surface)', border: '1px solid var(--border)',
+              borderRadius: 8, padding: '5px 10px', cursor: 'pointer',
+              transition: 'border-color 0.12s',
+            }}>
+              <div style={{
+                width: 22, height: 22, borderRadius: '50%',
+                background: 'rgba(170,255,0,0.1)', border: '1px solid rgba(170,255,0,0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 9, fontWeight: 700, color: 'var(--primary)',
+              }}>
+                {initials}
+              </div>
+              <span style={{ fontSize: 12.5, color: 'var(--t1)', fontWeight: 500, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {userName}
+              </span>
+            </div>
+          </div>
+
+          {/* Mobile: logout button */}
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--t3)', padding: 6, borderRadius: 7,
+              display: 'none', alignItems: 'center',
+            }}
+            className="mobile-logout"
+          >
+            <LogOut style={{ width: 15, height: 15 }} />
           </button>
         </div>
-
-        <NavLinks />
-        <UserFooter />
-      </aside>
-
-      {/* ── Topbar ───────────────────────────────────────────── */}
-      <header className="fixed top-0 left-0 md:left-60 right-0 h-14 z-30 flex items-center gap-3 px-4 md:px-6 bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--border)]">
-        {/* Hamburger */}
-        <button
-          className="md:hidden p-1.5 -ml-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-elevated)] transition-colors"
-          onClick={() => setMobileOpen(true)}
-          aria-label="Abrir menú"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-
-        {/* Mobile logo */}
-        <div className="md:hidden flex items-center gap-2">
-          <div className="w-6 h-6 bg-[var(--primary)] rounded-md flex items-center justify-center">
-            <Dumbbell className="w-3 h-3 text-black" />
-          </div>
-          <span className="font-bold text-sm">GymPro</span>
-        </div>
-
-        {/* Desktop breadcrumb */}
-        {activeLabel && (
-          <span className="hidden md:block text-sm font-medium text-[var(--text)]">
-            {activeLabel}
-          </span>
-        )}
-
-        <div className="flex-1" />
-
-        {/* Mobile logout */}
-        <button
-          onClick={handleLogout}
-          className="md:hidden p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-400/10 transition-colors"
-          aria-label="Cerrar sesión"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
       </header>
 
-      {/* ── Main content ─────────────────────────────────────── */}
-      <main className="md:ml-60 pt-14 min-h-dvh">
+      {/* Bottom nav (mobile) */}
+      <nav className="bottom-nav-bar">
+        {bottomNav.map(item => {
+          const active = isActive(item)
+          return (
+            <Link key={item.href} href={item.href} className={`bnav-item${active ? ' active' : ''}`}>
+              <item.icon style={{ width: 20, height: 20, strokeWidth: 1.8 }} />
+              <span>{item.label}</span>
+            </Link>
+          )
+        })}
+      </nav>
+
+      {/* Main */}
+      <main className="content-main">
         {children}
       </main>
+
     </div>
   )
 }
