@@ -27,10 +27,10 @@
   --input:         #1A1A24;
 
   /* ── Brand ──────────────────────────── */
-  --primary:            #AAFF00;
-  --primary-dim:        #88CC00;
-  --primary-foreground: #000000;
-  --ring:               #AAFF00;
+  --primary:            #FF3D1A;
+  --primary-dim:        #CC3015;
+  --primary-foreground: #ffffff;
+  --ring:               #FF3D1A;
 
   /* ── Semantic ───────────────────────── */
   --success:  #4ade80;
@@ -208,7 +208,7 @@ body {
   color: var(--t1);
 }
 .nav-active-item {
-  background: rgba(170,255,0,0.08) !important;
+  background: rgba(255,61,26,0.08) !important;
   color: var(--primary) !important;
   border-left-color: var(--primary) !important;
   padding-left: 8px !important;
@@ -283,7 +283,7 @@ body {
 }
 .input-accent:focus {
   border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px rgba(170,255,0,0.12) !important;
+  box-shadow: 0 0 0 3px rgba(255,61,26,0.12) !important;
   outline: none !important;
 }
 

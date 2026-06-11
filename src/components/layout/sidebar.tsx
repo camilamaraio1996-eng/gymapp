@@ -132,9 +132,9 @@ function SidebarContent({ navGroups, initials, userName, role, isActive, handleL
           width: 30, height: 30, background: 'var(--primary)', borderRadius: 8,
           display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}>
-          <Dumbbell style={{ width: 15, height: 15, strokeWidth: 2.5, color: '#000' }} />
+          <Dumbbell style={{ width: 15, height: 15, strokeWidth: 2.5, color: '#fff' }} />
         </div>
-        <span className="sidebar-label" style={{ fontSize: 15, fontWeight: 600, color: 'var(--t1)', letterSpacing: '-0.01em' }}>GymPro</span>
+        <span className="sidebar-label" style={{ fontSize: 15, fontWeight: 600, color: 'var(--t1)', letterSpacing: '-0.01em' }}>LangGym</span>
       </div>
 
       {/* Nav */}
@@ -190,7 +190,7 @@ function SidebarContent({ navGroups, initials, userName, role, isActive, handleL
       }}>
         <div style={{
           width: 30, height: 30, borderRadius: '50%',
-          background: 'rgba(170,255,0,0.1)', border: '1px solid rgba(170,255,0,0.2)',
+          background: 'rgba(255,61,26,0.1)', border: '1px solid rgba(255,61,26,0.2)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 11, fontWeight: 600, color: 'var(--primary)', flexShrink: 0,
           letterSpacing: '0.02em',
@@ -236,7 +236,7 @@ export function SidebarLayout({ role, userName, children }: SidebarLayoutProps) 
 
   const allItems = navGroups.flatMap(g => g.items)
   const activeItem = allItems.find(i => isActive(i))
-  const pageTitle = activeItem?.label ?? 'GymPro'
+  const pageTitle = activeItem?.label ?? 'LangGym'
 
   async function handleLogout() {
     await fetch('/api/auth/signout', { method: 'POST' })
@@ -263,7 +263,7 @@ export function SidebarLayout({ role, userName, children }: SidebarLayoutProps) 
 
         {/* Breadcrumb (desktop) */}
         <div className="topbar-breadcrumb" style={{ alignItems: 'center', gap: 6, flex: 1 }}>
-          <span style={{ fontSize: 12.5, color: 'var(--t3)', fontWeight: 400 }}>GymPro</span>
+          <span style={{ fontSize: 12.5, color: 'var(--t3)', fontWeight: 400 }}>LangGym</span>
           <ChevronRight style={{ width: 12, height: 12, color: 'var(--t3)' }} />
           <span style={{ fontSize: 12.5, color: 'var(--t1)', fontWeight: 500 }}>{pageTitle}</span>
         </div>
@@ -309,7 +309,7 @@ export function SidebarLayout({ role, userName, children }: SidebarLayoutProps) 
             }}>
               <div style={{
                 width: 22, height: 22, borderRadius: '50%',
-                background: 'rgba(170,255,0,0.1)', border: '1px solid rgba(170,255,0,0.2)',
+                background: 'rgba(255,61,26,0.1)', border: '1px solid rgba(255,61,26,0.2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 9, fontWeight: 700, color: 'var(--primary)',
               }}>

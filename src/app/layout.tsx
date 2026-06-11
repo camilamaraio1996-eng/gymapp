@@ -11,13 +11,13 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'GymPro — Gestión de Entrenamiento',
+  title: 'LangGym — Gestión de Entrenamiento',
   description: 'Sistema premium de gestión de rutinas para gimnasios',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'GymPro',
+    title: 'LangGym',
   },
 }
 
