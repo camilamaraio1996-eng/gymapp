@@ -291,6 +291,7 @@ body {
    ANIMATIONS
    ═══════════════════════════════════════ */
 @keyframes fadeIn   { from { opacity:0; transform:translateY(6px);  } to { opacity:1; transform:translateY(0); } }
+@keyframes spin     { from { transform:rotate(0deg); }              to { transform:rotate(360deg); } }
 @keyframes slideUp  { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
 @keyframes slideInL { from { opacity:0; transform:translateX(-12px);} to { opacity:1; transform:translateX(0);} }
 @keyframes shimmer  { from { background-position:-200% 0; }           to { background-position:200% 0; } }
@@ -357,6 +358,14 @@ body {
   .grid-admin-main { grid-template-columns: 1fr; }
 }
 
+/* 3-col stats grid */
+.stat-grid-3 { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); }
+
+/* ── TABLET (768–1023px) ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .stat-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+}
+
 /* ── MOBILE (<768px) ── */
 @media (max-width: 767px) {
   .dash-content    { padding: 16px 16px 32px; }
@@ -364,4 +373,6 @@ body {
   .grid-2          { grid-template-columns: 1fr; }
   .grid-admin-main { grid-template-columns: 1fr; }
   .mobile-logout   { display: flex !important; }
+  .stat-grid-3     { grid-template-columns: 1fr 1fr; }
+  .stat-grid-3 > *:last-child:nth-child(odd) { grid-column: span 2; }
 }

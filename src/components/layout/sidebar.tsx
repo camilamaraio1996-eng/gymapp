@@ -64,10 +64,10 @@ const alumnoNavGroups: NavGroup[] = [
     items: [
       { href: '/alumno',           label: 'Inicio',      icon: Home },
       { href: '/alumno/rutinas',   label: 'Mi rutina',   icon: ClipboardList },
-      { href: '/alumno/entrenar',  label: 'Entrenar',    icon: Zap,           pill: 'pronto' },
-      { href: '/alumno/historial', label: 'Historial',   icon: History,       pill: 'pronto' },
-      { href: '/alumno/progreso',  label: 'Mi progreso', icon: TrendingUp,    pill: 'pronto' },
-      { href: '/alumno/mensajes',  label: 'Mensajes',    icon: MessageSquare, pill: 'pronto' },
+      { href: '/alumno/entrenar',  label: 'Entrenar',    icon: Zap },
+      { href: '/alumno/historial', label: 'Historial',   icon: History },
+      { href: '/alumno/progreso',  label: 'Mi progreso', icon: TrendingUp },
+      { href: '/alumno/mensajes',  label: 'Mensajes',    icon: MessageSquare },
     ],
   },
 ]
