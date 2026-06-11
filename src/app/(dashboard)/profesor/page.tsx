@@ -1,8 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
-import { Users, Dumbbell, ChevronRight, Clock, Plus, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
-import { format, formatDistanceToNow } from 'date-fns'
+import { format, isToday, isYesterday } from 'date-fns'
 import { es } from 'date-fns/locale'
+import {
+  Users, Dumbbell, Zap, AlertTriangle, TrendingUp,
+  Activity, ChevronRight, ArrowRight, UserX, CheckCircle, Bell, MessageSquare,
+} from 'lucide-react'
+
+function fmtDate(d: Date) {
+  if (isToday(d)) return `hoy ${format(d, 'HH:mm')}`
+  if (isYesterday(d)) return `ayer ${format(d, 'HH:mm')}`
+  return format(d, "d MMM", { locale: es })
+}
 
 export default async function ProfesorDashboard() {
   const supabase = await createClient()
@@ -11,201 +20,345 @@ export default async function ProfesorDashboard() {
   const { data: profesor } = await supabase
     .from('profesores').select('*').eq('user_id', user!.id).single()
 
-  const [{ data: misAlumnos }, { count: totalRutinas }, { data: ultimasRutinas }] = await Promise.all([
-    supabase.from('alumnos').select('id, nombre, apellido, objetivo, created_at').eq('profesor_id', profesor?.id ?? '').order('created_at', { ascending: false }),
-    supabase.from('rutinas').select('*', { count: 'exact', head: true }).eq('created_by', user!.id),
-    supabase.from('rutinas').select('id, nombre, objetivo, dias_por_semana, updated_at, created_at').eq('created_by', user!.id).order('updated_at', { ascending: false }).limit(5),
+  if (!profesor) return (
+    <div style={{ textAlign: 'center', paddingTop: 60, color: 'var(--t2)' }}>
+      Perfil de profesor no encontrado.
+    </div>
+  )
+
+  const { data: misAlumnos } = await supabase
+    .from('alumnos')
+    .select('id, nombre, apellido, user_id')
+    .eq('profesor_id', profesor.id)
+    .order('nombre')
+
+  const alumnoIds = (misAlumnos ?? []).map(a => a.id)
+  const alumnosCount = alumnoIds.length
+
+  const [todasSesionesRes, recentMedicionesRes, rutinasCountRes, asignacionesRes] = await Promise.all([
+    alumnoIds.length > 0
+      ? supabase.from('sesiones')
+          .select('id, alumno_id, rutina_nombre, dia_label, iniciada_at')
+          .in('alumno_id', alumnoIds)
+          .not('finalizada_at', 'is', null)
+          .order('iniciada_at', { ascending: false })
+          .limit(300)
+      : Promise.resolve({ data: [] as { id: string; alumno_id: string; rutina_nombre: string | null; dia_label: string | null; iniciada_at: string }[] }),
+
+    alumnoIds.length > 0
+      ? supabase.from('mediciones')
+          .select('alumno_id, peso_kg, fecha')
+          .in('alumno_id', alumnoIds)
+          .order('fecha', { ascending: false })
+          .limit(20)
+      : Promise.resolve({ data: [] as { alumno_id: string; peso_kg: number | null; fecha: string }[] }),
+
+    supabase.from('rutinas')
+      .select('*', { count: 'exact', head: true })
+      .eq('created_by', user!.id),
+
+    alumnoIds.length > 0
+      ? supabase.from('asignaciones')
+          .select('alumno_id')
+          .in('alumno_id', alumnoIds)
+          .eq('activa', true)
+      : Promise.resolve({ data: [] as { alumno_id: string }[] }),
   ])
 
-  const alumnosCount = misAlumnos?.length ?? 0
-  const rutinasCount = totalRutinas ?? 0
+  const todasSesiones = todasSesionesRes.data ?? []
+  const recentMediciones = recentMedicionesRes.data ?? []
+  const rutinasCount = rutinasCountRes.count ?? 0
+
+  const now = Date.now()
+  const ms7 = 7 * 86_400_000
+  const ms3 = 3 * 86_400_000
+
+  // Last session per alumno
+  const lastSessionMap: Record<string, number> = {}
+  for (const s of todasSesiones) {
+    const t = new Date(s.iniciada_at).getTime()
+    if (!lastSessionMap[s.alumno_id] || t > lastSessionMap[s.alumno_id]) {
+      lastSessionMap[s.alumno_id] = t
+    }
+  }
+
+  let countActivos = 0, countRiesgo = 0, countInactivos = 0
+  const alumnosSinSesion: typeof misAlumnos = []
+  for (const a of (misAlumnos ?? [])) {
+    const last = lastSessionMap[a.id]
+    if (!last || now - last > ms7) { countInactivos++; alumnosSinSesion?.push(a) }
+    else if (now - last > ms3) countRiesgo++
+    else countActivos++
+  }
+
+  const sesionesEstaSemana = todasSesiones.filter(s => now - new Date(s.iniciada_at).getTime() < ms7).length
+
+  const trainedThisWeek = new Set(
+    todasSesiones.filter(s => now - new Date(s.iniciada_at).getTime() < ms7).map(s => s.alumno_id)
+  )
+  const asistenciaPct = alumnosCount > 0
+    ? Math.round((trainedThisWeek.size / alumnosCount) * 100)
+    : 0
+
+  const alumnosConRutina = new Set((asignacionesRes.data ?? []).map(a => a.alumno_id))
+  const alumnosSinRutina = (misAlumnos ?? []).filter(a => !alumnosConRutina.has(a.id))
+
+  // Timeline
+  const alumnoMap = Object.fromEntries((misAlumnos ?? []).map(a => [a.id, `${a.nombre} ${a.apellido}`]))
+
+  type TEvent = { date: Date; text: string; icon: 'session' | 'medicion'; name: string }
+  const sessionEvents: TEvent[] = todasSesiones.slice(0, 10).map(s => ({
+    date: new Date(s.iniciada_at),
+    text: `completó${s.rutina_nombre ? ` ${s.rutina_nombre}` : ' entrenamiento'}${s.dia_label ? ` · ${s.dia_label}` : ''}`,
+    icon: 'session',
+    name: alumnoMap[s.alumno_id] ?? 'Alumno',
+  }))
+  const medicionEvents: TEvent[] = recentMediciones.map(m => ({
+    date: new Date(m.fecha),
+    text: `registró ${m.peso_kg ? `${m.peso_kg} kg de peso` : 'nuevas mediciones'}`,
+    icon: 'medicion',
+    name: alumnoMap[m.alumno_id] ?? 'Alumno',
+  }))
+  const timeline = [...sessionEvents, ...medicionEvents]
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .slice(0, 8)
 
   const hora = new Date().getHours()
   const saludo = hora < 12 ? 'Buenos días' : hora < 19 ? 'Buenas tardes' : 'Buenas noches'
-  const today = format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })
 
-  const card: React.CSSProperties = {
-    background: 'var(--surface)',
-    border: '1px solid var(--border)',
-    borderRadius: 14,
-    overflow: 'hidden',
-  }
-  const cardHeader: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '16px 20px',
-    borderBottom: '1px solid rgba(255,255,255,0.06)',
-  }
+  const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14 }
+
+  const totalAlertas = countInactivos + alumnosSinRutina.length
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-      {/* Page header */}
+      {/* Header */}
       <div>
-        <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
-          {saludo}, {profesor?.nombre ?? 'Profesor'}
+        <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em' }}>
+          {saludo}, {profesor.nombre}
         </div>
-        <div style={{ fontSize: 13.5, color: 'var(--t2)', marginTop: 5 }}>{today}</div>
+        <div style={{ fontSize: 13, color: 'var(--t2)', marginTop: 4, textTransform: 'capitalize' }}>
+          {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
+        </div>
       </div>
 
-      {/* KPI stats */}
-      <div className="grid-2 stagger">
-        <Link href="/profesor/alumnos" style={{ textDecoration: 'none' }}>
-          <div className="card-hover" style={{ ...card, padding: '20px', cursor: 'pointer' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Mis alumnos</div>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(96,165,250,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Users style={{ width: 16, height: 16, color: '#60a5fa' } as React.CSSProperties} />
+      {/* KPI Row 1 */}
+      <div className="stat-grid-3 stagger">
+        {[
+          {
+            label: 'Alumnos', value: alumnosCount, href: '/profesor/alumnos',
+            sub: countActivos > 0 ? `${countActivos} activos esta semana` : alumnosCount > 0 ? 'Ninguno activo' : 'Sin alumnos',
+            subColor: countActivos > 0 ? '#4ade80' : 'var(--t3)',
+            iconColor: '#60a5fa', iconBg: 'rgba(96,165,250,0.1)', Icon: Users,
+          },
+          {
+            label: 'Sesiones esta semana', value: sesionesEstaSemana, href: '/profesor/asistencia',
+            sub: sesionesEstaSemana > 0 ? `${trainedThisWeek.size}/${alumnosCount} alumnos entrenaron` : 'Ninguna esta semana',
+            subColor: sesionesEstaSemana > 0 ? 'var(--primary)' : 'var(--t3)',
+            iconColor: 'var(--primary)', iconBg: 'rgba(170,255,0,0.08)', Icon: Zap,
+          },
+          {
+            label: 'Inactivos', value: countInactivos, href: '/profesor/asistencia',
+            sub: countInactivos > 0 ? `${countInactivos} sin entrenar +7 días` : alumnosCount > 0 ? 'Todos entrenando' : 'Sin alumnos',
+            subColor: countInactivos > 0 ? '#f87171' : '#4ade80',
+            iconColor: countInactivos > 0 ? '#f87171' : '#4ade80',
+            iconBg: countInactivos > 0 ? 'rgba(248,113,113,0.1)' : 'rgba(74,222,128,0.1)', Icon: countInactivos > 0 ? UserX : CheckCircle,
+          },
+        ].map(({ label, value, href, sub, subColor, iconColor, iconBg, Icon }) => (
+          <Link key={label} href={href} style={{ textDecoration: 'none' }}>
+            <div className="card-hover" style={{ ...card, padding: '18px 20px', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+                <div style={{ width: 32, height: 32, borderRadius: 9, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon style={{ width: 14, height: 14, color: iconColor } as React.CSSProperties} />
+                </div>
               </div>
+              <div className="num" style={{ fontSize: 30, fontWeight: 700, color: 'var(--t1)', lineHeight: 1 }}>{value}</div>
+              <div style={{ fontSize: 11.5, color: subColor, marginTop: 8, fontWeight: 500 }}>{sub}</div>
             </div>
-            <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums' }}>{alumnosCount}</div>
-            <div style={{ fontSize: 11.5, color: alumnosCount > 0 ? '#4ade80' : 'var(--t3)', marginTop: 7, fontWeight: 500 }}>
-              {alumnosCount > 0 ? `${alumnosCount} asignado${alumnosCount !== 1 ? 's' : ''}` : 'Sin alumnos aún'}
-            </div>
-          </div>
-        </Link>
-        <Link href="/profesor/rutinas" style={{ textDecoration: 'none' }}>
-          <div className="card-hover" style={{ ...card, padding: '20px', cursor: 'pointer' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Rutinas creadas</div>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(251,146,60,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Dumbbell style={{ width: 16, height: 16, color: '#fb923c' } as React.CSSProperties} />
-              </div>
-            </div>
-            <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums' }}>{rutinasCount}</div>
-            <div style={{ fontSize: 11.5, color: 'var(--t3)', marginTop: 7, fontWeight: 500 }}>
-              {rutinasCount > 0 ? `${rutinasCount} plan${rutinasCount !== 1 ? 'es' : ''} activo${rutinasCount !== 1 ? 's' : ''}` : 'Sin rutinas aún'}
-            </div>
-          </div>
-        </Link>
+          </Link>
+        ))}
       </div>
 
-      {/* Content grid */}
+      {/* KPI Row 2 */}
+      <div className="stat-grid-3 stagger">
+        {[
+          {
+            label: 'Rutinas creadas', value: rutinasCount, href: '/profesor/rutinas',
+            sub: rutinasCount > 0 ? `${rutinasCount} plan${rutinasCount !== 1 ? 'es' : ''} disponible${rutinasCount !== 1 ? 's' : ''}` : 'Sin rutinas aún',
+            subColor: 'var(--t3)', iconColor: '#fb923c', iconBg: 'rgba(251,146,60,0.1)', Icon: Dumbbell,
+          },
+          {
+            label: 'Asistencia semana', value: `${asistenciaPct}%`, href: '/profesor/asistencia',
+            sub: alumnosCount > 0 ? `${trainedThisWeek.size} de ${alumnosCount} alumnos` : 'Sin datos',
+            subColor: asistenciaPct >= 70 ? '#4ade80' : asistenciaPct >= 40 ? '#fbbf24' : asistenciaPct > 0 ? '#f87171' : 'var(--t3)',
+            iconColor: '#a78bfa', iconBg: 'rgba(167,139,250,0.1)', Icon: TrendingUp,
+          },
+          {
+            label: 'En riesgo', value: countRiesgo, href: '/profesor/asistencia',
+            sub: countRiesgo > 0 ? `${countRiesgo} sin entrenar 3-7 días` : 'Todos al día',
+            subColor: countRiesgo > 0 ? '#fbbf24' : '#4ade80',
+            iconColor: '#fbbf24', iconBg: 'rgba(251,191,36,0.1)', Icon: AlertTriangle,
+          },
+        ].map(({ label, value, href, sub, subColor, iconColor, iconBg, Icon }) => (
+          <Link key={label} href={href} style={{ textDecoration: 'none' }}>
+            <div className="card-hover" style={{ ...card, padding: '18px 20px', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+                <div style={{ width: 32, height: 32, borderRadius: 9, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon style={{ width: 14, height: 14, color: iconColor } as React.CSSProperties} />
+                </div>
+              </div>
+              <div className="num" style={{ fontSize: 30, fontWeight: 700, color: 'var(--t1)', lineHeight: 1 }}>{value}</div>
+              <div style={{ fontSize: 11.5, color: subColor, marginTop: 8, fontWeight: 500 }}>{sub}</div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Timeline + Alerts */}
       <div className="grid-2">
 
-        {/* Mis alumnos */}
+        {/* Activity timeline */}
         <div style={card}>
-          <div style={cardHeader}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(96,165,250,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Users style={{ width: 14, height: 14, color: '#60a5fa' } as React.CSSProperties} />
+              <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(96,165,250,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Activity style={{ width: 12, height: 12, color: '#60a5fa' } as React.CSSProperties} />
               </div>
-              <span style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--t1)' }}>Mis alumnos</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>Actividad reciente</span>
             </div>
-            <Link href="/profesor/alumnos" className="link-hover" style={{ fontSize: 12.5, color: 'var(--t3)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
-              Ver todos <ChevronRight style={{ width: 12, height: 12 } as React.CSSProperties} />
+            <Link href="/profesor/alumnos" className="link-hover" style={{ fontSize: 12, color: 'var(--t3)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
+              Ver alumnos <ChevronRight style={{ width: 11, height: 11 } as React.CSSProperties} />
             </Link>
           </div>
-          {!misAlumnos?.length ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-              <Users style={{ width: 32, height: 32, color: 'var(--t3)', margin: '0 auto 10px', display: 'block' } as React.CSSProperties} />
-              <div style={{ fontSize: 13.5, color: 'var(--t2)', fontWeight: 500 }}>Sin alumnos asignados</div>
-              <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 4 }}>El admin te asignará alumnos pronto.</div>
+          {timeline.length === 0 ? (
+            <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+              <Activity style={{ width: 28, height: 28, color: 'var(--t3)', margin: '0 auto 10px', display: 'block' } as React.CSSProperties} />
+              <div style={{ fontSize: 13, color: 'var(--t2)' }}>Sin actividad reciente</div>
+              <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 4 }}>Las sesiones y mediciones aparecerán aquí</div>
             </div>
           ) : (
-            <div>
-              {misAlumnos.slice(0, 6).map((alumno, i) => (
-                <div key={alumno.id} className="row-hover" style={{
-                  display: 'flex', alignItems: 'center', gap: 10, padding: '11px 20px',
-                  borderTop: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.05)',
-                }}>
-                  <div style={{
-                    width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-                    background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 10.5, fontWeight: 700, color: '#60a5fa',
-                  }}>
-                    {alumno.nombre[0]}{alumno.apellido[0]}
+            <div style={{ padding: '6px 0' }}>
+              {timeline.map((ev, i) => (
+                <div key={i} className="row-hover" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 20px' }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, marginTop: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: ev.icon === 'session' ? 'rgba(170,255,0,0.07)' : 'rgba(167,139,250,0.1)' }}>
+                    {ev.icon === 'session'
+                      ? <Zap style={{ width: 11, height: 11, color: 'var(--primary)' } as React.CSSProperties} />
+                      : <TrendingUp style={{ width: 11, height: 11, color: '#a78bfa' } as React.CSSProperties} />
+                    }
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--t1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {alumno.nombre} {alumno.apellido}
+                    <div style={{ fontSize: 13, color: 'var(--t1)', lineHeight: 1.4 }}>
+                      <span style={{ fontWeight: 600 }}>{ev.name.split(' ')[0]}</span>{' '}
+                      <span style={{ color: 'var(--t2)' }}>{ev.text}</span>
                     </div>
-                    {alumno.objetivo && (
-                      <div style={{ fontSize: 11.5, color: 'var(--t3)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{alumno.objetivo}</div>
-                    )}
+                    <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{fmtDate(ev.date)}</div>
                   </div>
                 </div>
               ))}
-              {(misAlumnos.length > 6) && (
-                <div style={{ padding: '10px 20px', fontSize: 12, color: 'var(--t3)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                  +{misAlumnos.length - 6} más
-                </div>
-              )}
             </div>
           )}
         </div>
 
-        {/* Rutinas recientes */}
+        {/* Smart alerts */}
         <div style={card}>
-          <div style={cardHeader}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(251,146,60,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Dumbbell style={{ width: 14, height: 14, color: '#fb923c' } as React.CSSProperties} />
+              <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Bell style={{ width: 12, height: 12, color: '#fbbf24' } as React.CSSProperties} />
               </div>
-              <span style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--t1)' }}>Rutinas recientes</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>Alertas</span>
             </div>
-            <Link href="/profesor/rutinas" className="link-hover" style={{ fontSize: 12.5, color: 'var(--t3)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
-              Ver todas <ChevronRight style={{ width: 12, height: 12 } as React.CSSProperties} />
-            </Link>
+            {totalAlertas > 0 && (
+              <span style={{ fontSize: 10.5, background: 'rgba(248,113,113,0.12)', color: '#f87171', padding: '2px 9px', borderRadius: 20, fontWeight: 700 }}>
+                {totalAlertas} alerta{totalAlertas !== 1 ? 's' : ''}
+              </span>
+            )}
           </div>
-          {!ultimasRutinas?.length ? (
-            <div style={{ textAlign: 'center', padding: '32px 20px' }}>
-              <Dumbbell style={{ width: 32, height: 32, color: 'var(--t3)', margin: '0 auto 10px', display: 'block' } as React.CSSProperties} />
-              <div style={{ fontSize: 13.5, color: 'var(--t2)', fontWeight: 500, marginBottom: 14 }}>No creaste rutinas aún</div>
-              <Link href="/profesor/rutinas?new=true" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: 'rgba(170,255,0,0.08)', border: '1px solid rgba(170,255,0,0.2)',
-                color: 'var(--primary)', fontSize: 12.5, fontWeight: 600,
-                padding: '8px 16px', borderRadius: 8, textDecoration: 'none',
-              }}>
-                <Plus style={{ width: 13, height: 13 } as React.CSSProperties} /> Crear primera rutina
-              </Link>
-            </div>
-          ) : (
-            <div>
-              {ultimasRutinas.map((rutina, i) => (
-                <div key={rutina.id} className="row-hover" style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: '11px 20px',
-                  borderTop: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.05)',
-                }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(251,146,60,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Dumbbell style={{ width: 13, height: 13, color: '#fb923c' } as React.CSSProperties} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--t1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rutina.nombre}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--t3)', marginTop: 1 }}>{rutina.dias_por_semana}x semana</div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--t3)', flexShrink: 0 }}>
-                    <Clock style={{ width: 11, height: 11 } as React.CSSProperties} />
-                    {formatDistanceToNow(new Date(rutina.updated_at), { locale: es, addSuffix: true })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <div style={{ padding: '6px 0' }}>
+            {totalAlertas === 0 && countRiesgo === 0 ? (
+              <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                <CheckCircle style={{ width: 28, height: 28, color: '#4ade80', margin: '0 auto 10px', display: 'block' } as React.CSSProperties} />
+                <div style={{ fontSize: 13, color: 'var(--t2)', fontWeight: 500 }}>Todo en orden</div>
+                <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 4 }}>No hay alertas pendientes</div>
+              </div>
+            ) : (
+              <>
+                {countInactivos > 0 && (
+                  <Link href="/profesor/asistencia" style={{ textDecoration: 'none' }}>
+                    <div className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px' }}>
+                      <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(248,113,113,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <UserX style={{ width: 15, height: 15, color: '#f87171' } as React.CSSProperties} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>
+                          {countInactivos} alumno{countInactivos !== 1 ? 's' : ''} inactivo{countInactivos !== 1 ? 's' : ''}
+                        </div>
+                        <div style={{ fontSize: 11.5, color: 'var(--t3)', marginTop: 2 }}>Sin entrenar hace más de 7 días</div>
+                      </div>
+                      <ChevronRight style={{ width: 12, height: 12, color: 'var(--t3)' } as React.CSSProperties} />
+                    </div>
+                  </Link>
+                )}
+                {countRiesgo > 0 && (
+                  <Link href="/profesor/asistencia" style={{ textDecoration: 'none' }}>
+                    <div className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderTop: countInactivos > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                      <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <AlertTriangle style={{ width: 15, height: 15, color: '#fbbf24' } as React.CSSProperties} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>
+                          {countRiesgo} en riesgo de abandono
+                        </div>
+                        <div style={{ fontSize: 11.5, color: 'var(--t3)', marginTop: 2 }}>Sin entrenar 3-7 días</div>
+                      </div>
+                      <ChevronRight style={{ width: 12, height: 12, color: 'var(--t3)' } as React.CSSProperties} />
+                    </div>
+                  </Link>
+                )}
+                {alumnosSinRutina.length > 0 && (
+                  <Link href="/profesor/alumnos" style={{ textDecoration: 'none' }}>
+                    <div className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderTop: (countInactivos > 0 || countRiesgo > 0) ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                      <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(96,165,250,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Dumbbell style={{ width: 15, height: 15, color: '#60a5fa' } as React.CSSProperties} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>
+                          {alumnosSinRutina.length} sin rutina asignada
+                        </div>
+                        <div style={{ fontSize: 11.5, color: 'var(--t3)', marginTop: 2 }}>
+                          {alumnosSinRutina.slice(0, 2).map(a => a.nombre).join(', ')}{alumnosSinRutina.length > 2 ? ` +${alumnosSinRutina.length - 2}` : ''}
+                        </div>
+                      </div>
+                      <ChevronRight style={{ width: 12, height: 12, color: 'var(--t3)' } as React.CSSProperties} />
+                    </div>
+                  </Link>
+                )}
+              </>
+            )}
+          </div>
         </div>
-
       </div>
 
       {/* Quick actions */}
-      <div className="grid-2">
+      <div className="stat-grid-3">
         {[
-          { label: 'Nueva rutina',    sub: 'Crear plan de entrenamiento', href: '/profesor/rutinas?new=true', Icon: Dumbbell, iconColor: '#fb923c', iconBg: 'rgba(251,146,60,0.1)' },
-          { label: 'Ver mis alumnos', sub: `${alumnosCount} asignados`,    href: '/profesor/alumnos',          Icon: Users,   iconColor: '#60a5fa', iconBg: 'rgba(96,165,250,0.1)'  },
-        ].map(({ label, sub, href, Icon, iconColor, iconBg }) => (
+          { label: 'Nueva rutina', sub: 'Crear plan de entrenamiento', href: '/profesor/rutinas?new=true', color: '#fb923c', bg: 'rgba(251,146,60,0.1)', Icon: Dumbbell },
+          { label: 'Ver alumnos', sub: `${alumnosCount} asignado${alumnosCount !== 1 ? 's' : ''}`, href: '/profesor/alumnos', color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', Icon: Users },
+          { label: 'Mensajes', sub: 'Chatear con alumnos', href: '/profesor/mensajes', color: 'var(--primary)', bg: 'rgba(170,255,0,0.08)', Icon: MessageSquare },
+        ].map(({ label, sub, href, color, bg, Icon }) => (
           <Link key={label} href={href} style={{ textDecoration: 'none' }}>
-            <div className="card-hover" style={{
-              ...card, padding: '16px 18px', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 14,
-            }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Icon style={{ width: 15, height: 15, color: iconColor } as React.CSSProperties} />
+            <div className="card-hover" style={{ ...card, padding: '16px 18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 9, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon style={{ width: 14, height: 14, color } as React.CSSProperties} />
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--t1)' }}>{label}</div>
-                <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2 }}>{sub}</div>
+                <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 1 }}>{sub}</div>
               </div>
-              <ArrowRight style={{ width: 14, height: 14, color: 'var(--t3)', flexShrink: 0 } as React.CSSProperties} />
+              <ArrowRight style={{ width: 13, height: 13, color: 'var(--t3)', flexShrink: 0 } as React.CSSProperties} />
             </div>
           </Link>
         ))}

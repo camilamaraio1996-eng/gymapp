@@ -52,9 +52,9 @@ const profesorNavGroups: NavGroup[] = [
       { href: '/profesor',            label: 'Dashboard',   icon: LayoutDashboard },
       { href: '/profesor/alumnos',    label: 'Mis alumnos', icon: Users },
       { href: '/profesor/rutinas',    label: 'Rutinas',     icon: Dumbbell },
-      { href: '/profesor/ejercicios', label: 'Ejercicios',  icon: BookOpen,      pill: 'pronto' },
-      { href: '/profesor/asistencia', label: 'Asistencia',  icon: Calendar,      pill: 'pronto' },
-      { href: '/profesor/mensajes',   label: 'Mensajes',    icon: MessageSquare, pill: 'pronto' },
+      { href: '/profesor/ejercicios', label: 'Ejercicios',  icon: BookOpen },
+      { href: '/profesor/asistencia', label: 'Asistencia',  icon: Calendar },
+      { href: '/profesor/mensajes',   label: 'Mensajes',    icon: MessageSquare },
     ],
   },
 ]
