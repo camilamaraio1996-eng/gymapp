@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import type { UserRole } from '@/lib/supabase/types'
 import {
   LayoutDashboard, Users, UserCheck, ClipboardList,
-  Calendar, TrendingUp, BarChart2,
+  Calendar, TrendingUp, BarChart2, Activity,
   Home, Zap, History, MessageSquare, BookOpen,
   LogOut, Settings, Dumbbell, Bell, Search,
   ChevronRight,
@@ -55,6 +55,12 @@ const profesorNavGroups: NavGroup[] = [
       { href: '/profesor/ejercicios', label: 'Ejercicios',  icon: BookOpen },
       { href: '/profesor/asistencia', label: 'Asistencia',  icon: Calendar },
       { href: '/profesor/mensajes',   label: 'Mensajes',    icon: MessageSquare },
+    ],
+  },
+  {
+    label: 'Analítica',
+    items: [
+      { href: '/profesor/rendimiento', label: 'Rendimiento', icon: Activity },
     ],
   },
 ]
