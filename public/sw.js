@@ -1,60 +1,59 @@
-// Service Worker for GymPro PWA
-const CACHE_NAME = 'gympro-v1'
-const STATIC_ASSETS = [
-  '/',
-  '/login',
-  '/manifest.json',
-]
+// Service Worker for LangGym PWA
+// Strategy:
+//   /_next/static/ (content-hashed) → cache-first (safe, never stale)
+//   HTML / navigation              → network-first (always fresh)
+//   /api/ / supabase               → bypass SW entirely
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS)
-    })
-  )
+const CACHE_NAME = 'langgym-v2'
+
+self.addEventListener('install', () => {
   self.skipWaiting()
 })
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
-      )
-    })
+    caches.keys().then(names =>
+      Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)))
+    )
   )
   self.clients.claim()
 })
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
-  if (event.request.url.includes('/api/')) return
-  if (event.request.url.includes('supabase')) return
-  
-  // No cachear archivos de desarrollo de Next.js ni websockets
-  if (
-    event.request.url.includes('/_next/') || 
-    event.request.url.includes('/__nextjs') ||
-    event.request.url.includes('hot-update')
-  ) {
+
+  const url = new URL(event.request.url)
+
+  // Never intercept API or Supabase calls
+  if (url.pathname.startsWith('/api/') || url.hostname.includes('supabase')) return
+
+  // Next.js hashed static assets → cache-first (content-addressed, safe forever)
+  if (url.pathname.startsWith('/_next/static/')) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(cache =>
+        cache.match(event.request).then(cached => {
+          if (cached) return cached
+          return fetch(event.request).then(res => {
+            if (res.ok) cache.put(event.request, res.clone())
+            return res
+          })
+        })
+      )
+    )
     return
   }
 
+  // Everything else (HTML pages, images, manifest) → network-first
+  // Users always get fresh content; cache is only a fallback when offline
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse
-      return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response
+    fetch(event.request)
+      .then(res => {
+        if (res.ok) {
+          const clone = res.clone()
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone))
         }
-        const responseToCache = response.clone()
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache)
-        })
-        return response
-      }).catch(() => cachedResponse)
-    })
+        return res
+      })
+      .catch(() => caches.match(event.request))
   )
 })
