@@ -176,9 +176,9 @@ export default function RutinasPage() {
         <Button onClick={openNew} size="sm"><Plus className="w-4 h-4" />Nueva</Button>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
-        <Input placeholder="Buscar rutina..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+      <div style={{ position: 'relative' }}>
+        <Search style={{ width: 14, height: 14, color: 'var(--t3)', position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+        <Input placeholder="Buscar rutina..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ paddingLeft: 38 }} />
       </div>
 
       {loading ? (

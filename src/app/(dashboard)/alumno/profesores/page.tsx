@@ -33,15 +33,13 @@ export default async function ProfesoresDirectory({
         </p>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
-        <Input 
-          type="search" 
-          placeholder="Buscar por nombre o especialidad..." 
-          className="pl-9 bg-[var(--card)] border-[var(--border)]"
+      <div style={{ position: 'relative' }}>
+        <Search style={{ width: 14, height: 14, color: 'var(--t3)', position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+        <Input
+          type="text"
+          placeholder="Buscar por nombre o especialidad..."
           defaultValue={q}
-          // Note: In a real app we'd use a client component for real-time search, 
-          // but for simplicity we rely on native form submission or just the UI for now.
+          style={{ paddingLeft: 38 }}
         />
       </div>
 
