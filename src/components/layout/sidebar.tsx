@@ -7,7 +7,7 @@ import type { UserRole } from '@/lib/supabase/types'
 import {
   LayoutDashboard, Users, UserCheck, ClipboardList,
   Calendar, TrendingUp, BarChart2, Activity,
-  Home, Zap, History, MessageSquare, BookOpen,
+  Home, Zap, History, BookOpen,
   LogOut, Settings, Dumbbell, Bell, Search,
   ChevronRight,
 } from 'lucide-react'
@@ -54,7 +54,6 @@ const profesorNavGroups: NavGroup[] = [
       { href: '/profesor/rutinas',    label: 'Rutinas',     icon: Dumbbell },
       { href: '/profesor/ejercicios', label: 'Ejercicios',  icon: BookOpen },
       { href: '/profesor/asistencia', label: 'Asistencia',  icon: Calendar },
-      { href: '/profesor/mensajes',   label: 'Mensajes',    icon: MessageSquare },
     ],
   },
   {
@@ -73,7 +72,6 @@ const alumnoNavGroups: NavGroup[] = [
       { href: '/alumno/entrenar',  label: 'Entrenar',    icon: Zap },
       { href: '/alumno/historial', label: 'Historial',   icon: History },
       { href: '/alumno/progreso',  label: 'Mi progreso', icon: TrendingUp },
-      { href: '/alumno/mensajes',  label: 'Mensajes',    icon: MessageSquare },
     ],
   },
 ]
@@ -94,7 +92,6 @@ const profesorBottomNav = [
   { href: '/profesor',         label: 'Dashboard',  icon: LayoutDashboard },
   { href: '/profesor/alumnos', label: 'Alumnos',    icon: Users },
   { href: '/profesor/rutinas', label: 'Rutinas',    icon: Dumbbell },
-  { href: '/profesor/mensajes',label: 'Mensajes',   icon: MessageSquare },
 ]
 const alumnoBottomNav = [
   { href: '/alumno',           label: 'Inicio',     icon: Home },

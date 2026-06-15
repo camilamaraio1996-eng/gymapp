@@ -9,7 +9,7 @@ import { es } from 'date-fns/locale'
 import { toast } from 'sonner'
 import {
   ChevronLeft, Loader2, Dumbbell, TrendingUp, Calendar, Clock,
-  Trophy, MessageSquare, Plus, Trash2, AlertTriangle, CheckCircle, Star,
+  Trophy, Plus, Trash2, AlertTriangle, CheckCircle, Star,
 } from 'lucide-react'
 
 interface Alumno {
@@ -197,13 +197,6 @@ export default function AlumnoDetailPage() {
               </div>
             )}
           </div>
-          <Link href={`/profesor/mensajes`} style={{
-            display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
-            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-            color: 'var(--t2)', fontSize: 13, padding: '8px 14px', borderRadius: 9, textDecoration: 'none',
-          }}>
-            <MessageSquare style={{ width: 13, height: 13 }} /> Mensaje
-          </Link>
         </div>
       </div>
 

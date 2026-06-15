@@ -4,7 +4,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
   Zap, Target, Flame, TrendingUp, Clock, Dumbbell,
-  ChevronRight, Calendar, BarChart2, MessageSquare, Trophy,
+  ChevronRight, Calendar, BarChart2, Trophy,
 } from 'lucide-react'
 
 /* ─── helpers ─────────────────────────────────────────────────── */
@@ -268,10 +268,9 @@ export default async function AlumnoHome() {
       )}
 
       {/* ── Quick links ── */}
-      <div className="grid-2-fixed">
+      <div>
         {([
           { label: 'Mi progreso', sub: 'Mediciones y marcas', href: '/alumno/progreso', Icon: TrendingUp, color: '#60a5fa', bg: 'rgba(96,165,250,0.1)' },
-          { label: 'Mensajes',    sub: prof ? `Chat con ${prof.nombre}` : 'Chat con tu profesor', href: '/alumno/mensajes', Icon: MessageSquare, color: '#a78bfa', bg: 'rgba(167,139,250,0.1)' },
         ] as const).map(({ label, sub, href, Icon, color, bg }) => (
           <Link key={label} href={href} style={{ textDecoration: 'none' }}>
             <div className="card-hover" style={{ ...card, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>

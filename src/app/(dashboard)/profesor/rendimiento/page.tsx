@@ -7,7 +7,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
   Trophy, TrendingUp, AlertTriangle, CheckCircle,
-  Users, Award, BarChart2, MessageSquare,
+  Users, Award, BarChart2,
   Flame, ChevronRight, Loader2, UserX, Activity,
   ArrowUp, ArrowDown, Minus, Zap,
 } from 'lucide-react'
@@ -412,9 +412,6 @@ export default function RendimientoPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 7, flexShrink: 0, alignSelf: 'center' }}>
-              <Link href="/profesor/mensajes" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--primary)', color: '#000', fontSize: 12, fontWeight: 700, padding: '7px 13px', borderRadius: 8, textDecoration: 'none' }}>
-                <MessageSquare style={{ width: 12, height: 12 }} /> Mensaje
-              </Link>
               <Link href={`/profesor/alumnos/${spotlight.alumno.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.05)', color: 'var(--t1)', fontSize: 12, fontWeight: 600, padding: '7px 13px', borderRadius: 8, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)' }}>
                 Ver perfil
               </Link>

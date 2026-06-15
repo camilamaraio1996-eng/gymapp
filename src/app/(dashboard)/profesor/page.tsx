@@ -4,7 +4,7 @@ import { format, isToday, isYesterday } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
   Users, Dumbbell, Zap, AlertTriangle, TrendingUp,
-  Activity, ChevronRight, ArrowRight, UserX, CheckCircle, Bell, MessageSquare,
+  Activity, ChevronRight, ArrowRight, UserX, CheckCircle, Bell,
 } from 'lucide-react'
 
 function fmtDate(d: Date) {
@@ -150,7 +150,6 @@ export default async function ProfesorDashboard() {
           {([
             { label: 'Nueva rutina', sub: 'Crear plan de entrenamiento', href: '/profesor/rutinas?new=true', color: '#fb923c', bg: 'rgba(251,146,60,0.1)', Icon: Dumbbell },
             { label: 'Ver alumnos', sub: '8 asignados', href: '/profesor/alumnos', color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', Icon: Users },
-            { label: 'Mensajes', sub: 'Chatear con alumnos', href: '/profesor/mensajes', color: 'var(--primary)', bg: 'rgba(255,61,26,0.08)', Icon: MessageSquare },
           ] as const).map(({ label, sub, href, color, bg, Icon }) => (
             <Link key={label} href={href} style={{ textDecoration: 'none' }}>
               <div className="card-hover" style={{ ...card, padding: '16px 18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -491,7 +490,6 @@ export default async function ProfesorDashboard() {
         {[
           { label: 'Nueva rutina', sub: 'Crear plan de entrenamiento', href: '/profesor/rutinas?new=true', color: '#fb923c', bg: 'rgba(251,146,60,0.1)', Icon: Dumbbell },
           { label: 'Ver alumnos', sub: `${alumnosCount} asignado${alumnosCount !== 1 ? 's' : ''}`, href: '/profesor/alumnos', color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', Icon: Users },
-          { label: 'Mensajes', sub: 'Chatear con alumnos', href: '/profesor/mensajes', color: 'var(--primary)', bg: 'rgba(255,61,26,0.08)', Icon: MessageSquare },
         ].map(({ label, sub, href, color, bg, Icon }) => (
           <Link key={label} href={href} style={{ textDecoration: 'none' }}>
             <div className="card-hover" style={{ ...card, padding: '16px 18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
