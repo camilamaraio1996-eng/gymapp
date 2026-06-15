@@ -33,15 +33,15 @@ const adminNavGroups: NavGroup[] = [
   {
     label: 'Módulos',
     items: [
-      { href: '/admin/asistencia', label: 'Asistencia',    icon: Calendar,   pill: 'pronto' },
-      { href: '/admin/progreso',   label: 'Progreso',      icon: TrendingUp, pill: 'pronto' },
-      { href: '/admin/reportes',   label: 'Reportes',      icon: BarChart2,  pill: 'beta'   },
+      { href: '/admin/asistencia', label: 'Asistencia',    icon: Calendar   },
+      { href: '/admin/progreso',   label: 'Progreso',      icon: TrendingUp },
+      { href: '/admin/reportes',   label: 'Reportes',      icon: BarChart2  },
     ],
   },
   {
     label: 'Sistema',
     items: [
-      { href: '/admin/config',     label: 'Configuración', icon: Settings,   pill: 'pronto' },
+      { href: '/admin/config',     label: 'Configuración', icon: Settings   },
     ],
   },
 ]
