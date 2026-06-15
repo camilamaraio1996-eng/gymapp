@@ -20,11 +20,155 @@ export default async function ProfesorDashboard() {
   const { data: profesor } = await supabase
     .from('profesores').select('*').eq('user_id', user!.id).single()
 
-  if (!profesor) return (
-    <div style={{ textAlign: 'center', paddingTop: 60, color: 'var(--t2)' }}>
-      Perfil de profesor no encontrado.
-    </div>
-  )
+  if (!profesor) {
+    const hora = new Date().getHours()
+    const saludo = hora < 12 ? 'Buenos días' : hora < 19 ? 'Buenas tardes' : 'Buenas noches'
+    const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14 }
+    const demoTimeline = [
+      { name: 'Carlos M.', text: 'completó Fuerza Full Body · Pecho y Tríceps', icon: 'session' as const, date: new Date(Date.now() - 2 * 3600_000) },
+      { name: 'María L.', text: 'registró 62.5 kg de peso', icon: 'medicion' as const, date: new Date(Date.now() - 5 * 3600_000) },
+      { name: 'Lucas G.', text: 'completó Hipertrofia Tren Superior · Espalda', icon: 'session' as const, date: new Date(Date.now() - 26 * 3600_000) },
+      { name: 'Ana P.', text: 'completó Cardio HIIT · Full Body', icon: 'session' as const, date: new Date(Date.now() - 50 * 3600_000) },
+      { name: 'Pedro R.', text: 'registró nuevas mediciones', icon: 'medicion' as const, date: new Date(Date.now() - 72 * 3600_000) },
+    ]
+    return (
+      <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {/* Demo notice */}
+        <div style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.18)', borderRadius: 10, padding: '11px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <AlertTriangle style={{ width: 14, height: 14, color: '#fbbf24', flexShrink: 0 }} />
+          <span style={{ fontSize: 12.5, color: '#fbbf24', fontWeight: 500 }}>
+            Modo demo · Tu perfil de profesor aún no está vinculado al sistema. Contacta al administrador para activar tu cuenta.
+          </span>
+        </div>
+        {/* Header */}
+        <div>
+          <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em' }}>{saludo}, Profesor</div>
+          <div style={{ fontSize: 13, color: 'var(--t2)', marginTop: 4, textTransform: 'capitalize' }}>
+            {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
+          </div>
+        </div>
+        {/* KPI Row 1 */}
+        <div className="stat-grid-3">
+          {([
+            { label: 'Alumnos', value: 8, sub: '5 activos esta semana', subColor: '#4ade80', iconColor: '#60a5fa', iconBg: 'rgba(96,165,250,0.1)', Icon: Users },
+            { label: 'Sesiones esta semana', value: 23, sub: '7/8 alumnos entrenaron', subColor: 'var(--primary)', iconColor: 'var(--primary)', iconBg: 'rgba(255,61,26,0.08)', Icon: Zap },
+            { label: 'Inactivos', value: 1, sub: '1 sin entrenar +7 días', subColor: '#f87171', iconColor: '#f87171', iconBg: 'rgba(248,113,113,0.1)', Icon: UserX },
+          ] as const).map(({ label, value, sub, subColor, iconColor, iconBg, Icon }) => (
+            <div key={label} style={{ ...card, padding: '18px 20px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+                <div style={{ width: 32, height: 32, borderRadius: 9, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon style={{ width: 14, height: 14, color: iconColor } as React.CSSProperties} />
+                </div>
+              </div>
+              <div className="num" style={{ fontSize: 30, fontWeight: 700, color: 'var(--t1)', lineHeight: 1 }}>{value}</div>
+              <div style={{ fontSize: 11.5, color: subColor, marginTop: 8, fontWeight: 500 }}>{sub}</div>
+            </div>
+          ))}
+        </div>
+        {/* KPI Row 2 */}
+        <div className="stat-grid-3">
+          {([
+            { label: 'Rutinas creadas', value: 4, sub: '4 planes disponibles', subColor: 'var(--t3)', iconColor: '#fb923c', iconBg: 'rgba(251,146,60,0.1)', Icon: Dumbbell },
+            { label: 'Asistencia semana', value: '87%', sub: '7 de 8 alumnos', subColor: '#4ade80', iconColor: '#a78bfa', iconBg: 'rgba(167,139,250,0.1)', Icon: TrendingUp },
+            { label: 'En riesgo', value: 1, sub: '1 sin entrenar 3–7 días', subColor: '#fbbf24', iconColor: '#fbbf24', iconBg: 'rgba(251,191,36,0.1)', Icon: AlertTriangle },
+          ] as const).map(({ label, value, sub, subColor, iconColor, iconBg, Icon }) => (
+            <div key={label} style={{ ...card, padding: '18px 20px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+                <div style={{ width: 32, height: 32, borderRadius: 9, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon style={{ width: 14, height: 14, color: iconColor } as React.CSSProperties} />
+                </div>
+              </div>
+              <div className="num" style={{ fontSize: 30, fontWeight: 700, color: 'var(--t1)', lineHeight: 1 }}>{value}</div>
+              <div style={{ fontSize: 11.5, color: subColor, marginTop: 8, fontWeight: 500 }}>{sub}</div>
+            </div>
+          ))}
+        </div>
+        {/* Timeline + Alerts */}
+        <div className="grid-2">
+          <div style={card}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(96,165,250,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Activity style={{ width: 12, height: 12, color: '#60a5fa' } as React.CSSProperties} />
+                </div>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>Actividad reciente</span>
+              </div>
+              <span style={{ fontSize: 10, background: 'rgba(251,191,36,0.1)', color: '#fbbf24', padding: '2px 8px', borderRadius: 20, fontWeight: 600, letterSpacing: '0.04em' }}>DEMO</span>
+            </div>
+            <div style={{ padding: '6px 0' }}>
+              {demoTimeline.map((ev, i) => (
+                <div key={i} className="row-hover" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 20px' }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, marginTop: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: ev.icon === 'session' ? 'rgba(255,61,26,0.07)' : 'rgba(167,139,250,0.1)' }}>
+                    {ev.icon === 'session'
+                      ? <Zap style={{ width: 11, height: 11, color: 'var(--primary)' } as React.CSSProperties} />
+                      : <TrendingUp style={{ width: 11, height: 11, color: '#a78bfa' } as React.CSSProperties} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, color: 'var(--t1)', lineHeight: 1.4 }}>
+                      <span style={{ fontWeight: 600 }}>{ev.name.split(' ')[0]}</span>{' '}
+                      <span style={{ color: 'var(--t2)' }}>{ev.text}</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{fmtDate(ev.date)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={card}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Bell style={{ width: 12, height: 12, color: '#fbbf24' } as React.CSSProperties} />
+                </div>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>Alertas</span>
+              </div>
+              <span style={{ fontSize: 10.5, background: 'rgba(248,113,113,0.12)', color: '#f87171', padding: '2px 9px', borderRadius: 20, fontWeight: 700 }}>2 alertas</span>
+            </div>
+            <div style={{ padding: '6px 0' }}>
+              {[
+                { label: '1 alumno inactivo', sub: 'Sin entrenar hace más de 7 días', color: '#f87171', bg: 'rgba(248,113,113,0.1)', Icon: UserX },
+                { label: '1 sin rutina asignada', sub: 'Marcos Torres', color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', Icon: Dumbbell },
+              ].map(({ label, sub, color, bg, Icon }, i) => (
+                <div key={i} className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 9, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon style={{ width: 15, height: 15, color } as React.CSSProperties} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>{label}</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--t3)', marginTop: 2 }}>{sub}</div>
+                  </div>
+                  <ChevronRight style={{ width: 12, height: 12, color: 'var(--t3)' } as React.CSSProperties} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        {/* Quick actions */}
+        <div className="stat-grid-3">
+          {([
+            { label: 'Nueva rutina', sub: 'Crear plan de entrenamiento', href: '/profesor/rutinas?new=true', color: '#fb923c', bg: 'rgba(251,146,60,0.1)', Icon: Dumbbell },
+            { label: 'Ver alumnos', sub: '8 asignados', href: '/profesor/alumnos', color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', Icon: Users },
+            { label: 'Mensajes', sub: 'Chatear con alumnos', href: '/profesor/mensajes', color: 'var(--primary)', bg: 'rgba(255,61,26,0.08)', Icon: MessageSquare },
+          ] as const).map(({ label, sub, href, color, bg, Icon }) => (
+            <Link key={label} href={href} style={{ textDecoration: 'none' }}>
+              <div className="card-hover" style={{ ...card, padding: '16px 18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 9, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon style={{ width: 14, height: 14, color } as React.CSSProperties} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--t1)' }}>{label}</div>
+                  <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 1 }}>{sub}</div>
+                </div>
+                <ArrowRight style={{ width: 13, height: 13, color: 'var(--t3)', flexShrink: 0 } as React.CSSProperties} />
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   const { data: misAlumnos } = await supabase
     .from('alumnos')
@@ -156,7 +300,7 @@ export default async function ProfesorDashboard() {
             label: 'Sesiones esta semana', value: sesionesEstaSemana, href: '/profesor/asistencia',
             sub: sesionesEstaSemana > 0 ? `${trainedThisWeek.size}/${alumnosCount} alumnos entrenaron` : 'Ninguna esta semana',
             subColor: sesionesEstaSemana > 0 ? 'var(--primary)' : 'var(--t3)',
-            iconColor: 'var(--primary)', iconBg: 'rgba(170,255,0,0.08)', Icon: Zap,
+            iconColor: 'var(--primary)', iconBg: 'rgba(255,61,26,0.08)', Icon: Zap,
           },
           {
             label: 'Inactivos', value: countInactivos, href: '/profesor/asistencia',
@@ -243,7 +387,7 @@ export default async function ProfesorDashboard() {
             <div style={{ padding: '6px 0' }}>
               {timeline.map((ev, i) => (
                 <div key={i} className="row-hover" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 20px' }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, marginTop: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: ev.icon === 'session' ? 'rgba(170,255,0,0.07)' : 'rgba(167,139,250,0.1)' }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, marginTop: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: ev.icon === 'session' ? 'rgba(255,61,26,0.07)' : 'rgba(167,139,250,0.1)' }}>
                     {ev.icon === 'session'
                       ? <Zap style={{ width: 11, height: 11, color: 'var(--primary)' } as React.CSSProperties} />
                       : <TrendingUp style={{ width: 11, height: 11, color: '#a78bfa' } as React.CSSProperties} />
@@ -347,7 +491,7 @@ export default async function ProfesorDashboard() {
         {[
           { label: 'Nueva rutina', sub: 'Crear plan de entrenamiento', href: '/profesor/rutinas?new=true', color: '#fb923c', bg: 'rgba(251,146,60,0.1)', Icon: Dumbbell },
           { label: 'Ver alumnos', sub: `${alumnosCount} asignado${alumnosCount !== 1 ? 's' : ''}`, href: '/profesor/alumnos', color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', Icon: Users },
-          { label: 'Mensajes', sub: 'Chatear con alumnos', href: '/profesor/mensajes', color: 'var(--primary)', bg: 'rgba(170,255,0,0.08)', Icon: MessageSquare },
+          { label: 'Mensajes', sub: 'Chatear con alumnos', href: '/profesor/mensajes', color: 'var(--primary)', bg: 'rgba(255,61,26,0.08)', Icon: MessageSquare },
         ].map(({ label, sub, href, color, bg, Icon }) => (
           <Link key={label} href={href} style={{ textDecoration: 'none' }}>
             <div className="card-hover" style={{ ...card, padding: '16px 18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
