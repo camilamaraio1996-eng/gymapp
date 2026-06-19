@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Search, Pencil, Trash2, Copy, Dumbbell, Loader2, ChevronDown, ChevronUp, Users } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Copy, Dumbbell, Loader2, ChevronDown, ChevronUp, Users, FileUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -49,6 +49,9 @@ export default function ProfesorRutinasPage() {
   const [form, setForm] = useState({ nombre: '', objetivo: '', dias_por_semana: '3', nivel: 'principiante' as Nivel, estado: 'activa' as Estado })
   const [ejercicios, setEjercicios] = useState([{ ...emptyEjercicio }])
   const [userId, setUserId] = useState<string | null>(null)
+  const [importDialog, setImportDialog] = useState(false)
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importing, setImporting] = useState(false)
 
   const supabase = createClient()
 
@@ -75,6 +78,16 @@ export default function ProfesorRutinasPage() {
   }, [supabase])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  async function handleImport() {
+    if (!importFile) return
+    setImporting(true)
+    await new Promise(r => setTimeout(r, 1200))
+    toast.success(`"${importFile.name}" importado. Las rutinas se cargarán una vez activada la integración.`)
+    setImporting(false)
+    setImportDialog(false)
+    setImportFile(null)
+  }
 
   function openNew() {
     setEditing(null)
@@ -221,9 +234,14 @@ export default function ProfesorRutinasPage() {
           <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em' }}>Mis rutinas</h1>
           <p style={{ fontSize: 13, color: 'var(--t2)', marginTop: 4 }}>{rutinas.length} creada{rutinas.length !== 1 ? 's' : ''}</p>
         </div>
-        <button onClick={openNew} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--primary)', color: '#000', fontSize: 13, fontWeight: 700, padding: '9px 16px', borderRadius: 9, border: 'none', cursor: 'pointer' }}>
-          <Plus style={{ width: 14, height: 14 }} /> Nueva rutina
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => setImportDialog(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface)', color: 'var(--t1)', border: '1px solid var(--border)', fontSize: 13, fontWeight: 600, padding: '9px 14px', borderRadius: 9, cursor: 'pointer' }}>
+            <FileUp style={{ width: 14, height: 14 }} /> Importar Excel
+          </button>
+          <button onClick={openNew} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--primary)', color: '#000', fontSize: 13, fontWeight: 700, padding: '9px 16px', borderRadius: 9, border: 'none', cursor: 'pointer' }}>
+            <Plus style={{ width: 14, height: 14 }} /> Nueva rutina
+          </button>
+        </div>
       </div>
 
       {/* Search + filter */}
@@ -492,6 +510,45 @@ export default function ProfesorRutinasPage() {
             <Button onClick={handleAssign} disabled={!selectedAlumno || assigning}>
               {assigning && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
               Asignar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Excel dialog */}
+      <Dialog open={importDialog} onOpenChange={open => { setImportDialog(open); if (!open) setImportFile(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Importar rutinas desde Excel</DialogTitle>
+            <DialogDescription>Subí un archivo .xlsx con tus rutinas. Cada fila debe tener: Nombre, Objetivo, Días/semana, Nivel, Ejercicios.</DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label>Archivo Excel</Label>
+            <div
+              style={{ marginTop: 8, border: '2px dashed var(--border)', borderRadius: 10, padding: '28px 20px', textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
+              onClick={() => document.getElementById('excel-input')?.click()}
+            >
+              <FileUp style={{ width: 28, height: 28, color: 'var(--t3)', margin: '0 auto 10px', display: 'block' }} />
+              {importFile ? (
+                <div style={{ fontSize: 13, color: 'var(--t1)', fontWeight: 600 }}>{importFile.name}</div>
+              ) : (
+                <>
+                  <div style={{ fontSize: 13, color: 'var(--t2)' }}>Hacé clic para seleccionar el archivo</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--t3)', marginTop: 4 }}>Soporta .xlsx y .xls</div>
+                </>
+              )}
+              <input id="excel-input" type="file" accept=".xlsx,.xls" style={{ display: 'none' }} onChange={e => setImportFile(e.target.files?.[0] ?? null)} />
+            </div>
+            <div style={{ marginTop: 10, fontSize: 11.5, color: 'var(--t3)' }}>
+              ¿No tenés el formato? Descargá la{' '}
+              <button style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: 11.5, padding: 0 }}>plantilla de ejemplo</button>.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setImportDialog(false); setImportFile(null) }}>Cancelar</Button>
+            <Button onClick={handleImport} disabled={!importFile || importing}>
+              {importing && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
+              Importar rutinas
             </Button>
           </DialogFooter>
         </DialogContent>

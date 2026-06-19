@@ -4,7 +4,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
   Zap, Target, Flame, TrendingUp, Clock, Dumbbell,
-  ChevronRight, Calendar, BarChart2, Trophy,
+  ChevronRight, Calendar, BarChart2, Trophy, Bell,
 } from 'lucide-react'
 
 /* ─── helpers ─────────────────────────────────────────────────── */
@@ -70,6 +70,20 @@ export default async function AlumnoHome() {
     supabase.from('sesiones').select('*', { count: 'exact', head: true })
       .eq('alumno_id', alumnoId).not('finalizada_at', 'is', null),
   ])
+
+  // Compute days remaining for active routine (assumes dias_por_semana weeks duration)
+  const rutinaActiva = asignaciones?.[0]
+  const rutinaVencimiento = (() => {
+    if (!rutinaActiva) return null
+    const asig = rutinaActiva as any
+    const fechaAsig = asig.fecha_asignacion ? new Date(asig.fecha_asignacion + 'T12:00:00') : null
+    const semanas = asig.rutina?.dias_por_semana ?? 0
+    if (!fechaAsig || !semanas) return null
+    const vence = new Date(fechaAsig.getTime() + semanas * 7 * 86_400_000)
+    const diffMs = vence.getTime() - Date.now()
+    const dias = Math.ceil(diffMs / 86_400_000)
+    return dias
+  })()
 
   const allFechas = (fechasSesiones ?? []).map(s => s.iniciada_at)
   const racha = calcularRacha(allFechas)
@@ -137,6 +151,34 @@ export default async function AlumnoHome() {
           <Dumbbell style={{ width: 32, height: 32, color: 'var(--t3)', margin: '0 auto 10px', display: 'block' }} />
           <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--t1)', marginBottom: 5 }}>Aún no tenés rutina asignada</div>
           <div style={{ fontSize: 13, color: 'var(--t2)' }}>Tu profesor te asignará una rutina pronto.</div>
+        </div>
+      )}
+
+      {/* ── Notificación vencimiento rutina ── */}
+      {rutinaVencimiento !== null && rutinaVencimiento <= 7 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          background: rutinaVencimiento <= 2 ? 'rgba(248,113,113,0.08)' : 'rgba(251,191,36,0.08)',
+          border: `1px solid ${rutinaVencimiento <= 2 ? 'rgba(248,113,113,0.25)' : 'rgba(251,191,36,0.25)'}`,
+          borderRadius: 12, padding: '14px 18px',
+        }}>
+          <div style={{
+            width: 34, height: 34, borderRadius: 9, flexShrink: 0,
+            background: rutinaVencimiento <= 2 ? 'rgba(248,113,113,0.12)' : 'rgba(251,191,36,0.12)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Bell style={{ width: 15, height: 15, color: rutinaVencimiento <= 2 ? '#f87171' : '#fbbf24' }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--t1)' }}>
+              {rutinaVencimiento <= 0
+                ? 'Tu rutina venció hoy'
+                : `Tu rutina vence en ${rutinaVencimiento} ${rutinaVencimiento === 1 ? 'día' : 'días'}`}
+            </div>
+            <div style={{ fontSize: 11.5, color: 'var(--t3)', marginTop: 2 }}>
+              Hablá con tu profesor para renovarla o asignarte una nueva.
+            </div>
+          </div>
         </div>
       )}
 

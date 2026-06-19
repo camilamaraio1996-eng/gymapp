@@ -1,4 +1,4 @@
-import { BarChart2, Users, TrendingUp, DollarSign, Download, ArrowUpRight, Medal } from 'lucide-react'
+import { BarChart2, Users, TrendingUp, DollarSign, Download, ArrowUpRight, Medal, CalendarDays } from 'lucide-react'
 
 const kpis = [
   { label: 'Ingresos del mes',  value: '$184.000', sub: '+12% vs mayo',           icon: DollarSign, iconColor: '#4ade80', iconBg: 'rgba(74,222,128,0.12)',  trend: '+12%', trendUp: true  },
@@ -23,6 +23,13 @@ const topStudents = [
   { name: 'Valentina Suárez', initials: 'VS', sessions: 13, streak: 10, badge: '🥉' },
   { name: 'Diego Fernández',  initials: 'DF', sessions: 12, streak: 5,  badge: '4°' },
   { name: 'Nicolás Torres',   initials: 'NT', sessions: 10, streak: 3,  badge: '5°' },
+]
+
+const weeklyData = [
+  { week: 'Semana 1', dates: '2–8 jun',   sessions: 34, attendancePct: 91, revenue: '$44.000', status: 'ok' as const },
+  { week: 'Semana 2', dates: '9–15 jun',  sessions: 38, attendancePct: 88, revenue: '$48.000', status: 'ok' as const },
+  { week: 'Semana 3', dates: '16–22 jun', sessions: 36, attendancePct: 85, revenue: '$46.000', status: 'warn' as const },
+  { week: 'Semana 4', dates: '23–30 jun', sessions: 34, attendancePct: 90, revenue: '$46.000', status: 'ok' as const },
 ]
 
 const reports = [
@@ -156,6 +163,45 @@ export default function ReportesPage() {
           </div>
         </div>
 
+      </div>
+
+      {/* Ficha semanal */}
+      <div style={{ ...card, marginBottom: 14 }}>
+        <div style={cardHeader}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(167,139,250,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CalendarDays style={{ width: 14, height: 14, color: '#a78bfa' }} />
+            </div>
+            <span style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--t1)' }}>Ficha semanal</span>
+          </div>
+          <span style={{ fontSize: 11.5, color: 'var(--t3)' }}>Junio 2026</span>
+        </div>
+        {/* Table header */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 90px 70px', gap: 0, padding: '8px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          {['Semana', 'Sesiones', 'Asistencia', 'Ingresos', 'Estado'].map(h => (
+            <span key={h} style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</span>
+          ))}
+        </div>
+        {weeklyData.map((w, i) => (
+          <div key={w.week} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 90px 70px', gap: 0, padding: '13px 20px', borderTop: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.04)', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>{w.week}</div>
+              <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 1 }}>{w.dates}</div>
+            </div>
+            <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--t1)' }}>{w.sessions}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: w.attendancePct >= 88 ? '#4ade80' : '#fbbf24' }}>{w.attendancePct}%</span>
+            </div>
+            <span style={{ fontSize: 13, color: 'var(--t1)', fontWeight: 500 }}>{w.revenue}</span>
+            <span style={{
+              fontSize: 10.5, fontWeight: 700, padding: '3px 8px', borderRadius: 999, display: 'inline-block',
+              background: w.status === 'ok' ? 'rgba(74,222,128,0.1)' : 'rgba(251,191,36,0.1)',
+              color: w.status === 'ok' ? '#4ade80' : '#fbbf24',
+            }}>
+              {w.status === 'ok' ? 'Normal' : 'Baja'}
+            </span>
+          </div>
+        ))}
       </div>
 
       {/* Downloadable reports */}
